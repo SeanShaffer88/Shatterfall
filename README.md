@@ -10,6 +10,10 @@ Solo-Hero Action Dungeon Crawler / Weapon-Evolution RPG. Godot 4.5.x (pinned), A
 - [QUESTIONS.md](QUESTIONS.md) — ambiguity log; the agent files questions here instead of inventing systems.
 - [PHASE1_PROMPT.md](PHASE1_PROMPT.md) — the first prompt to paste into a Claude Code session.
 - [PHASE2_PROMPT.md](PHASE2_PROMPT.md) — the Phase 2 prompt (controller, hero kits, camera rig, Gate 2).
+- [PHASE3_PROMPT.md](PHASE3_PROMPT.md) — the Phase 3 prompt (dungeon loop, boon draft, boss grudge, Gate 3).
+- [PHASE4_PROMPT.md](PHASE4_PROMPT.md) — the Phase 4 prompt (spectral echo recording & playback, Gate 4).
+- [PHASE5_PROMPT.md](PHASE5_PROMPT.md) — the Phase 5 prompt (main hub, stage briefing, visual polish, Gate 5).
+- [PHASE6_PROMPT.md](PHASE6_PROMPT.md) — the Phase 6 on-device verification checklist (manual, Galaxy S24 Ultra).
 
 ## Build order
 
