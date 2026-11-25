@@ -9,6 +9,7 @@ Solo-Hero Action Dungeon Crawler / Weapon-Evolution RPG. Godot 4.5.x (pinned), A
 - [AGENTS.md](AGENTS.md) — session rules for the coding agent (phase discipline, test integrity, scope locks).
 - [QUESTIONS.md](QUESTIONS.md) — ambiguity log; the agent files questions here instead of inventing systems.
 - [PHASE1_PROMPT.md](PHASE1_PROMPT.md) — the first prompt to paste into a Claude Code session.
+- [PHASE2_PROMPT.md](PHASE2_PROMPT.md) — the Phase 2 prompt (controller, hero kits, camera rig, Gate 2).
 
 ## Build order
 
