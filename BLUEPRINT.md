@@ -36,7 +36,7 @@ Numbers marked "tunable" are starting points selected for one 6–9 minute run w
 **Title:** *Shatterfall*
 **Genre:** Solo-Hero Action Dungeon Crawler / Weapon-Evolution RPG
 **Platform:** Android first (offline, no ads, no purchases), landscape, one-thumb virtual stick + 3 manual skill buttons; Windows desktop build for development only.
-**Visual Identity:** Painted Stained-Glass Reliquary — obsidian and charcoal cathedral stone pierced by crimson, amber, and violet stained-glass light; crisp character silhouettes; glowing crystalline weapon evolutions; translucent stained-glass Echo spirits.
+**Visual Identity:** Painted Stained-Glass Reliquary — obsidian and charcoal cathedral stone pierced by crimson, amber, and violet stained-glass light; crisp character silhouettes; glowing crystalline weapon evolutions; translucent stained-glass Echo spirits. **Visual language is normative in `ART_DIRECTION.md` (AD1–AD12)**; its per-hero emissive rules and color coding carry gate hooks (see that document §5).
 
 ### Core Gameplay Loop
 1. **Stage Briefing & Hero Commit (Main Hub):** inspect hazards, the 3 hero-specific stars, your recorded Spectral Echoes for this stage, and Vespera's current Grudge Adaptation; commit **one** hero:
@@ -267,7 +267,7 @@ Drops biased +25% toward the other two heroes' weapon classes until the next cle
 - **Orientation & UI:** **Landscape 2400×1080** base, `canvas_items` stretch, aspect `expand` (D1). Theme `#121318` background, crimson `#D92638` + jewel accents. Virtual stick bottom-left, 3 skill buttons bottom-right arc with radial cooldown rings, stats top-left, wave info top-right, pause top-right corner. Safe margins ≥ 48 px; verify at both 16:9 and 19.5:9.
 - **Min device:** Galaxy S24 Ultra @ 60 fps (D8); floor = Snapdragon 480-class @ 30 fps, no crash.
 - **Scope:** Stage 1 (*The Sunken Nave*, 4 rooms + Vespera), 3 heroes, Stop-to-Attack + 3 skills, Hero-Specific Stars, Spectral Echoes, Grudge Adaptation, Same-Type Absorption/Build-Up Forge. **No scope additions** — file an ambiguity as a question instead of inventing a system.
-- **Art policy:** gray-box placeholder meshes + the one custom `stained_glass_echo.gdshader`; colors/lighting per Visual Identity. no custom modeled art in the slice.
+- **Art policy:** gray-box placeholder meshes + the one custom `stained_glass_echo.gdshader`; colors/lighting per Visual Identity and the locked rules in `ART_DIRECTION.md` (AD1–AD12), whose emissive hooks (AD2/AD3/AD4) must exist in `HeroActor.tscn` from Phase 2. No custom modeled art in the slice.
 
 ### 2. Directory & Scene Architecture
 ```text
