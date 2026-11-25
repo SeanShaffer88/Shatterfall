@@ -18,9 +18,11 @@
 - Always paste/return the real command output in your summary. A gate claim without output is not a completed phase.
 
 ## Engineering ground rules
-- Godot 4.x, **Mobile renderer** (D2). Forward+ is for Windows dev builds only.
+- Godot **4.5.x stable, pinned** (D22), **Mobile renderer** (D2). Forward+ is for Windows dev builds only.
+- Loading `data/*.json` **fails loud**: malformed JSON aborts with a precise file/field error — never default silently (D22).
 - Full 3D; all units meters and m/s (D4). No 2D px/s values anywhere.
-- All JSON files carry `"schema_version": 1`; saves are atomic write-then-rename (D15).
+- All JSON files carry `"schema_version": 1`; saves are atomic write-then-rename (D15). Single save slot `user://save.json` (D23).
+- Package identity (D24): id `com.seanshaffer88.shatterfall`, version `0.1.0`, display name **Shatterfall**, English-only.
 - Art is **gray-box placeholder meshes + `stained_glass_echo.gdshader`** only. Visual language rules and emissive hooks are locked in `ART_DIRECTION.md` (AD1–AD12); bake AD2/AD3/AD4 emissive hooks into `HeroActor.tscn` during Phase 2. No custom modeled art in the slice.
 - `Engine.time_scale` effects must respect the Echo timing caveat (`BLUEPRINT.md` §2B).
 - Echo damage/kills never count toward star conditions (D9); boons are run-only (D14).

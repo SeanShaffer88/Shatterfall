@@ -1,6 +1,6 @@
 # Shatterfall
 
-Solo-Hero Action Dungeon Crawler / Weapon-Evolution RPG. Godot 4.x, Android-first (landscape, offline), Mobile renderer.
+Solo-Hero Action Dungeon Crawler / Weapon-Evolution RPG. Godot 4.5.x (pinned), Android-first (landscape, offline), Mobile renderer.
 
 ## Documents
 

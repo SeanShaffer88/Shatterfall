@@ -25,6 +25,15 @@
 | D13 | Onboarding | Forge UI unlocks after the first boss kill. Before that, the inventory is usable (drops accumulate) but the Forge drawer shows a locked tooltip. See §5. |
 | D14 | Boon persistence | Boons are run-only. They are lost on death **and** do not carry into the next run after a win. |
 | D15 | Save format | All JSON files carry `"schema_version": 1`. Saves are atomic (write temp file, then rename). |
+| D16 | Sub-stats | Absorb rotation is `+ATK`, `+CRIT`, `+HP` (`+ELEMENT` is cut — no element system in the slice). `+CRIT` = +1% crit chance per stack (crit = ×2 damage, base 15%); `+HP` = +2 max HP per stack. |
+| D17 | Weapon power | `tier` = quality band 1–3 (drives drop rarity, mesh/glow preset, and salvage yield). Level-1 ATK per class: Greataxe 20, Daggers 6 (per hit, ×2 flurry), Shortbow 11, Staff 14. ATK grows +6% per weapon level; Build-Up evolutions grant the locked +20% (§2C). |
+| D18 | Weapon slots | Strictly **one main weapon per weapon-class per hero**. Rogue owns mains for two classes and both are equipped simultaneously (range swap is automatic). Every other same-class drop is fodder; off-class drops cannot be absorbed at all (D5). |
+| D19 | Drops & essence | Stage 1: each cleared room drops one weapon with chance 40%, class weighted 60% toward the current run's hero / 40% other valid classes; Vespera guarantees 1 weapon drop + 1 Vespera essence per clear. Monster essences drop only from bosses in the slice. |
+| D20 | Inventory | Single save slot; unlimited fodder items in the slice (no inventory cap); Absorb/Salvage actions are performed only in the Hub, never mid-run. |
+| D21 | Echo inheritance | Playable echo effects always resolve against the recording hero's **current** weapon state at playback time — evolutions retroactively strengthen old echoes. `weapon_id` in the echo record is informational only, non-authoritative. |
+| D22 | Engine & tooling pin | Godot **4.5.x stable** (pinned, no minor-version drift). Headless tests use a hand-rolled `SceneTree` script — no GUT or plugin dependencies. Loading `data/*.json` **fails loud**: malformed JSON aborts with a precise file/field error, never silent defaults. |
+| D23 | Save slots | Exactly one save slot in the slice: `user://save.json`. Echo files remain per `(stage, hero)` under `user://echoes/`. |
+| D24 | Package identity | Package id `com.seanshaffer88.shatterfall`, app version `0.1.0`, display name **Shatterfall**. English-only; no i18n scaffolding. |
 
 Numbers marked "tunable" are starting points selected for one 6–9 minute run with the three grips below; tune by playtest, never silently.
 
@@ -167,17 +176,19 @@ Intent-anchored keyframes, not frame recording.
 }
 ```
 
-**Playback (normative):** entering Room `R` as hero X, `EchoDirector` loads the saved echoes of the **other two** heroes. At `room_elapsed_time >= event.time`, spawn a `SpectralEchoActor` (translucent stained-glass Fresnel shader, crimson/cyan), aim via **smart snap**: the nearest **living** enemy within **3.5 m** of the recorded target point; if none is alive in the room, **skip the event silently** (no whiff into empty rooms). Execute at **65% base potency**, inheriting the recording hero's current Build-Up weapon effect. Echo damage/kills are **excluded from star tracking** (D9). Echoes fire in the boss room too. First-run heroes (no saved echoes) see: "No echoes yet — clear this stage with another hero" in the Stage Briefing.
+**Playback (normative):** entering Room `R` as hero X, `EchoDirector` loads the saved echoes of the **other two** heroes. At `room_elapsed_time >= event.time`, spawn a `SpectralEchoActor` (translucent stained-glass Fresnel shader, crimson/cyan), aim via **smart snap**: the nearest **living** enemy within **3.5 m** of the recorded target point; if none is alive in the room, **skip the event silently** (no whiff into empty rooms). Execute at **65% base potency**, inheriting the recording hero's **current** weapon state at playback time (D21 — evolutions retroactively strengthen old echoes; the recorded `weapon_id` is informational only). Echo damage/kills are **excluded from star tracking** (D9). Echoes fire in the boss room too. First-run heroes (no saved echoes) see: "No echoes yet — clear this stage with another hero" in the Stage Briefing.
 
 **Hit-stop caveat:** `Engine.time_scale` micro-dips must **not** shift any countdown the Echo system uses. If global time tricks are used, trigger them only mid-swing on non-skill hits, and record/play back echo timers in *scaled* time consistently.
 
 ### C. Same-Type Absorption & Build-Up (`WeaponForge.gd`)
 
-**Data model:** `weapon_class` (`GREATAXE`, `DAGGERS`, `SHORTBOW`, `STAFF`), `owner_hero` (hero-locked, D5), `tier`, `level`, `xp`, `xp_to_next`, `salvage_shards`, `uid`.
+**Data model:** `weapon_class` (`GREATAXE`, `DAGGERS`, `SHORTBOW`, `STAFF`), `owner_hero` (hero-locked, D5), `tier` (quality band 1–3: drop rarity, mesh/glow preset, salvage yield — D17), `level`, `xp`, `xp_to_next`, `salvage_shards`, `uid`.
+
+**Slots & power (D17/D18):** one main weapon per weapon-class per hero; the Rogue's two mains are both equipped and swap automatically. Weapon ATK = class base (Greataxe 20, Daggers 6 ×2 hits, Shortbow 11, Staff 14) × `1.06^(level−1)` × evolution bonus (+20%).
 
 **Rules (normative):**
 - `can_absorb(main, fodder)` = same `weapon_class` AND different `uid` AND `fodder.owner_hero == main.owner_hero`.
-- **Absorb:** transfers `fodder.base_xp + (fodder.level * 25)` XP (default `base_xp = 10`, tunable) into `main.xp` and adds a permanent `+1` to one rotating sub-stat (`+ATK`, `+CRIT`, `+ELEMENT`).
+- **Absorb:** transfers `fodder.base_xp + (fodder.level * 25)` XP (default `base_xp = 10`, tunable) into `main.xp` and adds a permanent `+1` to one rotating sub-stat (`+ATK`, `+CRIT`, `+HP` — D16: crit = ×2 damage at 15% base chance, +1%/stack; +2 HP/stack; **no `+ELEMENT` stat exists**).
 - **XP curve (tunable):** `xp_to_next(level) = round(50 * 1.5^(level-1))`; level cap 10 in the slice.
 - **Salvage:** destroys the fodder, grants N class shards (`GREATAXE_SHARD`, …; N = 2 + tier, tunable) plus any infused monster essence.
 - **Build-Up trigger:** `main.level >= recipe.req_level` AND shards ≥ `recipe.shard_cost` AND owns `recipe.boss_essence_id`. Evolving mutates `weapon_id`, swaps mesh/VFX, grants **+20% ATK**, and sets the evolution's Echo visual preset.
@@ -214,6 +225,8 @@ Intent-anchored keyframes, not frame recording.
 | Spike trap | — | Telegraphed floor spikes, 10 dmg, 1 s warning |
 
 **Stage 1 — The Sunken Nave** (rooms 1→4, then Vespera; target 6–9 min, D6):
+
+**Drops & essence (D19):** each cleared room drops one weapon with chance **40%**; the drop's class is weighted **60% toward the current run's hero's class(es)**, 40% split across the other classes; Vespera guarantees **1 weapon + 1 Vespera essence** per clear; essence drops come only from bosses in the slice. Inventory is uncapped and Absorb/Salvage happen only in the Hub (D20).
 - Room 1: 1 wave — 3 Crawlers + 1 Spitter.
 - Room 2: 2 waves — 4 Crawlers → 2 Spitters + 2 Crawlers.
 - Room 3: 2 waves + spike traps — 2 Crawlers + 2 Spitters → 1 Bulwark + 3 Crawlers.
@@ -263,7 +276,8 @@ Drops biased +25% toward the other two heroes' weapon classes until the next cle
 > Hand this section (and everything above it) to the coding agent as-is. Do **not** wrap it in an outer markdown fence — earlier drafts broke because of nested triple backticks.
 
 ### 1. Project Identity & Hard Constraints
-- **Engine:** Godot 4.x, **Mobile renderer** (D2); Android `arm64-v8a` + Windows dev build.
+- **Engine:** Godot **4.5.x stable, pinned** (D22), **Mobile renderer** (D2); Android `arm64-v8a` + Windows dev build.
+- **Package identity (D24):** id `com.seanshaffer88.shatterfall`, version `0.1.0`, display name **Shatterfall**, English-only — set in `project.godot` from Phase 1.
 - **Orientation & UI:** **Landscape 2400×1080** base, `canvas_items` stretch, aspect `expand` (D1). Theme `#121318` background, crimson `#D92638` + jewel accents. Virtual stick bottom-left, 3 skill buttons bottom-right arc with radial cooldown rings, stats top-left, wave info top-right, pause top-right corner. Safe margins ≥ 48 px; verify at both 16:9 and 19.5:9.
 - **Min device:** Galaxy S24 Ultra @ 60 fps (D8); floor = Snapdragon 480-class @ 30 fps, no crash.
 - **Scope:** Stage 1 (*The Sunken Nave*, 4 rooms + Vespera), 3 heroes, Stop-to-Attack + 3 skills, Hero-Specific Stars, Spectral Echoes, Grudge Adaptation, Same-Type Absorption/Build-Up Forge. **No scope additions** — file an ambiguity as a question instead of inventing a system.
@@ -300,7 +314,7 @@ res://
 
 ### 3. Execution Phases (build & verify sequentially; a phase is done only when its gate passes)
 
-**Phase 1 — Data, SaveManager, Weapon Forge.** `GameState.gd`, `SaveManager.gd` (schema_version, atomic writes), `WeaponForge.gd` with the D5 hero-lock and §2C rules.
+**Phase 1 — Data, SaveManager, Weapon Forge.** `GameState.gd`, `SaveManager.gd` (schema_version, atomic writes, single slot D23), `WeaponForge.gd` with the D5 hero-lock, D18 slot model, D16 sub-stats, D17 ATK/tier math, and D19 drop tables; fail-loud `data/*.json` loading (D22); populate `heroes.json`/`weapons.json`/`stages.json` from the §2 tables.
 *Gate 1 (headless):* absorption rejects mismatched class **and** foreign-owner fodder; matching absorbs grant XP + sub-stat; salvage yields correct shard counts; evolution triggers at level/shard/essence thresholds; save round-trip preserves `schema_version`.
 
 **Phase 2 — Stop-to-Attack Controller & Hero Kits.** `HeroActor.tscn`/`HeroController.gd` exactly as §2A (one threshold set: deadzone 0.18, stop 0.25 m/s, grace 0.08 s); joystick (`InputEventScreenDrag`) + WASD fallback; Rogue distance-based swap (≤ 2.6 m daggers / ≤ 10.5 m bow); 3 skills per hero from §2D with cooldown rings; camera rig per D3.
@@ -322,7 +336,7 @@ res://
 ```bash
 godot --headless --path . -s res://tests/test_core_systems.gd
 ```
-All assertions (hero-lock, weapon-class enforcement, Rogue threshold switching, Grudge rotation, star persistence, boon run-scope, echo round-trip, stop-threshold timing) must exit `0` before a phase is declared complete. **Headless gates cannot verify feel** — Phase 6 is not optional.
+All assertions (hero-lock, weapon-class enforcement, Rogue threshold switching, Grudge rotation, star persistence, boon run-scope, echo round-trip, stop-threshold timing, D16–D19 stat/drop math, D23 save round-trip) must exit `0` before a phase is declared complete. Tests are a hand-rolled `SceneTree` script — no plugins (D22). **Headless gates cannot verify feel** — Phase 6 is not optional.
 
 ---
 
