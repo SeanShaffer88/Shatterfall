@@ -122,6 +122,7 @@ func _execute_primary_attack() -> void:
 
 signal primary_attack_fired(attack_id: String, target: Node3D)
 signal skill_cast(skill_id: String)
+signal skill_cast_at(skill_id: String, target_point: Vector3, mode: String)   # D34 echo recording
 signal attack_spawned(node: Area3D)          # every Hitbox / Projectile the hero creates
 signal damaged(hp_lost: int, absorbed_by: String)
 signal died

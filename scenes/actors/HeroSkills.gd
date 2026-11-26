@@ -22,6 +22,8 @@ var cooldown_mult: float = 1.0  # Fracture Focus hooks in here (Phase 3)
 var _buffered: int = -1
 var _buffer_left: float = 0.0
 var _pending: Array[Dictionary] = []   # { "t": seconds left, "fn": Callable }
+var _aim_point: Vector3 = Vector3.ZERO   # where the cast in progress is aimed (D34)
+var _aim_mode: String = ""
 
 
 func setup(owner_hero: HeroController) -> void:
@@ -101,10 +103,13 @@ func _after(seconds: float, fn: Callable) -> void:
 
 func _cast(i: int) -> bool:
 	var d: Dictionary = defs[i]
+	_aim_point = Combat.flat(hero.global_position)
+	_aim_mode = ""
 	var ok: bool = call("_cast_" + str(d["id"]).to_lower(), d)
 	if ok:
 		cooldowns[i] = cooldown_of(i)
 		hero.skill_cast.emit(d["id"])
+		hero.skill_cast_at.emit(d["id"], _aim_point, _aim_mode)
 	return ok
 
 
@@ -150,6 +155,7 @@ func _cast_leap_slam(d: Dictionary) -> bool:
 	else:
 		land = Combat.flat(hero.global_position) + hero.aim_dir() * leap
 	land.y = hero.global_position.y
+	_aim_point = Combat.flat(land)
 	hero.face(land)
 	var lock := float(d["lock"])
 	_lock(d, Combat.flat(land - hero.global_position) / lock)
@@ -209,6 +215,8 @@ func _cast_adaptive_barrage(d: Dictionary) -> bool:
 	if target != null:
 		hero.face(target.global_position)
 	var dir := hero.forward()
+	_aim_mode = "DAGGERS" if daggers else "BOW"
+	_aim_point = Combat.flat(target.global_position) if target != null else Combat.flat(hero.global_position + dir * minf(reach, 4.0))
 	if daggers:
 		var dmg := _damage(d, "DAGGERS")
 		hero.spawn_hitbox("ADAPTIVE_BARRAGE_DAGGERS", hero.global_position + dir * reach * 0.5, reach)
@@ -235,6 +243,7 @@ func _cast_shatter_mark(d: Dictionary) -> bool:
 	if target == null:
 		return false
 	hero.face(target.global_position)
+	_aim_point = Combat.flat(target.global_position)
 	hero.spawn_hitbox("SHATTER_MARK", target.global_position, 0.6)
 	target.apply_status("MARK", {
 		"duration": float(p["duration"]),
@@ -265,6 +274,7 @@ func _cast_gravity_well(d: Dictionary) -> bool:
 	else:
 		center = Combat.flat(hero.global_position + hero.aim_dir() * 3.0)
 	hero.face(center)
+	_aim_point = center
 	var radius := float(p["radius"])
 	var dmg := _damage(d)
 	var zone := hero.spawn_hitbox("GRAVITY_WELL", center, radius)

@@ -51,8 +51,10 @@ for name, text in docs.items():
             fail(f"{name}:{i}: uses 'tier' (retired by D26; say rarity or evo_stage)")
         if "Shattered Reliquary" in line and "retired" not in line:
             fail(f"{name}:{i}: uses the retired 'Shattered Reliquary' codename")
+# "Reliquary" alone is an in-game name (Visual Identity, D42); the codename is the pair.
 for path in ROOT.rglob("*"):
-    if "reliquary" in path.name.lower() and ".git" not in path.parts:
+    flat = path.name.lower().replace("_", "").replace("-", "").replace(" ", "")
+    if "shatteredreliquary" in flat and ".git" not in path.parts:
         fail(f"{path.relative_to(ROOT)}: filename uses the retired codename")
 
 # 5. Every Godot version mention matches the D22 pin.

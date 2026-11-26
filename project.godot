@@ -14,6 +14,7 @@ run/main_scene="res://scenes/main/DungeonRun.tscn"
 
 SaveManager="*res://autoload/SaveManager.gd"
 GameState="*res://autoload/GameState.gd"
+EchoDirector="*res://autoload/EchoDirector.gd"
 
 [display]
 
