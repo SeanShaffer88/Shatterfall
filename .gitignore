@@ -10,3 +10,5 @@ export_credentials.cfg
 
 # Export output
 /build/
+gate.out
+gate.err
