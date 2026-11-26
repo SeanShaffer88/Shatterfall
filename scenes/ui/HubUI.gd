@@ -29,7 +29,9 @@ var _bark_left: float = 0.0
 
 func bind(owner_hub: MainHub) -> void:
 	hub = owner_hub
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	# Full-screen root: anchors AND offsets (not just anchors), so centre- and
+	# bottom-anchored children never collapse to a 0×0 parent.
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_build()
 	hub.hub_changed.connect(refresh)
@@ -226,6 +228,8 @@ func _fodder_row(w: Weapon, absorbable: bool) -> HBoxContainer:
 
 
 func show_bark(speaker: String, text: String) -> void:
+	if forge_panel.visible:
+		return                               # never over the Forge tome
 	bark_label.text = ("Vespera: " if speaker == "VESPERA" else "") + text
 	bark_label.visible = true
 	_bark_left = float(GameState.barks_data["rules"]["duration"])

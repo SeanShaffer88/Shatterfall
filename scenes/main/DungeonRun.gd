@@ -406,7 +406,8 @@ func star_progress() -> Dictionary:
 			var r := int(str(st["scope"]).trim_prefix("room_"))
 			value = room_hp_lost.get(r, 0)
 			met = r in rooms_completed and value <= thr
-	return {"id": st["id"], "name": st["name"], "metric": st["metric"], "value": value, "threshold": thr, "met": met}
+	return {"id": st["id"], "name": st["name"], "metric": st["metric"], "value": value, "threshold": thr, "met": met,
+		"reached": str(st["metric"]) != "hp_lost" or int(str(st["scope"]).trim_prefix("room_")) in rooms_completed}
 
 
 # --- End of run (D10, D29) ----------------------------------------------------------------

@@ -241,3 +241,32 @@ func test_brief_commit_run_summary_hub_loop(t: TestContext) -> void:
 		hub = null
 		sim.dispose()
 		sim = null
+
+
+## Regression (found by the windowed Hub run): the Hub UI collapsed to 0×0, so
+## the bottom-right buttons vanished and the Forge tome sat in a corner.
+func test_hub_layout_fills_the_screen(t: TestContext) -> void:
+	for size in [Vector2i(2400, 1080), Vector2i(2340, 1080)]:
+		var vp := SubViewport.new()
+		vp.size = size
+		_tree().root.add_child(vp)
+		var h: MainHub = HUB_SCENE.instantiate()
+		vp.add_child(h)
+		var label := "%dx%d" % [size.x, size.y]
+		t.eq(h.ui.size, Vector2(size), "%s: Hub UI fills the screen" % label)
+		var safe := Rect2(Vector2.ZERO, Vector2(size)).grow(-48.0)
+		for b in [h.ui.enter_button, h.ui.forge_button, h.ui.restore_button]:
+			t.ok(safe.encloses(b.get_global_rect()), "%s: %s inside the 48 px margins" % [label, b.text])
+			t.ok(b.get_global_rect().position.x > size.x * 0.4, "%s: %s on the right" % [label, b.text])
+		h.ui.forge_panel.visible = true
+		var c := h.ui.forge_panel.get_global_rect().get_center()
+		t.ok(c.distance_to(Vector2(size) * 0.5) < 80.0, "%s: Forge tome centred" % label)
+		vp.free()
+
+
+func test_summary_star_text_when_room_2_was_never_cleared(t: TestContext) -> void:
+	var st := {"metric": "hp_lost", "value": 0, "threshold": 0, "reached": false}
+	t.eq(RunHud.star_progress_text(st), "Room 2 was not cleared this run", "no misleading '0 / 0'")
+	st["reached"] = true
+	st["value"] = 7
+	t.eq(RunHud.star_progress_text(st), "Lost 7 HP in Room 2 (needs 0)", "plain-English progress")

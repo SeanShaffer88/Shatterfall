@@ -52,7 +52,7 @@ func test_cleave_master_not_met_below_half(t: TestContext) -> void:
 	t.ok(not s.run.star_progress()["met"], "45% is not enough")
 	s.kill_boss()
 	t.ok(not GameState.has_star(STAGE, "BRUTE"), "no star")
-	t.contains(s.run.hud.summary_label.text, "progress: 45% / 50%", "summary shows progress")
+	t.contains(s.run.hud.summary_label.text, "Crimson Guard was up 45% of the fight (needs 50%)", "summary shows progress in plain English")
 
 
 func test_close_work_counts_only_live_dagger_hits_in_the_fight(t: TestContext) -> void:

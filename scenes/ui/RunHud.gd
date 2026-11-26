@@ -97,6 +97,8 @@ func is_over_control(pos: Vector2) -> bool:
 
 
 func show_bark(speaker: String, text: String) -> void:
+	if summary_panel.visible or pause_panel.visible or draft_panel.visible:
+		return                               # never over an overlay
 	bark_label.text = ("Vespera: " if speaker == "VESPERA" else "") + text
 	bark_label.modulate = Color("#C9A2F0") if speaker == "VESPERA" else Color("#F2E6D0")
 	bark_label.visible = true
@@ -162,6 +164,8 @@ func show_boss(boss: BossVespera) -> void:
 
 
 func show_summary(s: Dictionary) -> void:
+	bark_label.visible = false
+	_bark_left = 0.0
 	draft_panel.visible = false
 	pause_panel.visible = false
 	boss_bar.visible = false
@@ -181,7 +185,7 @@ static func summary_text(s: Dictionary) -> String:
 	else:
 		lines.append("Stars are only earned on a clear.")
 	if not s["star_earned"]:
-		lines.append("  progress: %s / %s" % [_fmt(st["value"], st["metric"]), _fmt(st["threshold"], st["metric"])])
+		lines.append("  " + star_progress_text(st))
 	lines.append("Drops kept: %d weapon(s)%s" % [s["drops"].size(), "  +  Vespera essence" if s["essence"] != "" else ""])
 	lines.append("Forge progress kept.")
 	if int(s.get("glass", 0)) > 0:
@@ -191,6 +195,20 @@ static func summary_text(s: Dictionary) -> String:
 	if s["adaptation"] != "":
 		lines.append("Vespera adapts: %s" % s["adaptation"])
 	return "\n".join(lines)
+
+
+## Plain-English progress toward the hero's star (D37).
+static func star_progress_text(st: Dictionary) -> String:
+	match str(st["metric"]):
+		"guard_uptime_fraction":
+			return "Crimson Guard was up %s of the fight (needs %s)" % [_fmt(st["value"], st["metric"]), _fmt(st["threshold"], st["metric"])]
+		"dagger_hits":
+			return "%d dagger hits on Vespera (needs %d)" % [int(st["value"]), int(st["threshold"])]
+		"hp_lost":
+			if not st.get("reached", true):
+				return "Room 2 was not cleared this run"
+			return "Lost %d HP in Room 2 (needs 0)" % int(st["value"])
+	return ""
 
 
 static func _fmt(v, metric: String) -> String:
