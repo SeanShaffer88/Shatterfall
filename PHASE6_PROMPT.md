@@ -4,9 +4,24 @@ Prerequisite: Phase 5 complete with Gate 5 green. This phase is **yours, not the
 
 ## Setup
 
-1. Confirm the D22 pin: **Godot 4.7.2 stable** with matching export templates, OpenJDK 17 and the Android SDK (D40), Mobile renderer (D2) — if a debug APK refuses to install, check the export preset before anything else.
-2. Export the Android build per D24: package `com.seanshaffer88.shatterfall`, `arm64-v8a`, version `0.1.0`, display name **Shatterfall**, **landscape locked** — verify the orientation lock in the Android export preset/manifest, not just in `project.godot`.
-3. Install on the **Galaxy S24 Ultra** (D8), enable `adb logcat`, and run the checklist below with the device untethered for feel tests but connected for log capture.
+Already verified on the dev machine (2026-11-26): Godot 4.7.2 export templates, JDK 21, the Android SDK and the debug keystore are configured. `export_presets.cfg` builds a debug APK whose manifest shows `com.seanshaffer88.shatterfall`, version 0.1.0, `arm64-v8a` only and `screenOrientation=sensorLandscape`.
+
+1. Enable USB debugging on the **Galaxy S24 Ultra** (D8) and connect it. Check it's listed:
+   ```powershell
+   & "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" devices
+   ```
+2. Build the debug APK from the repo root:
+   ```powershell
+   & "$env:LOCALAPPDATA\Programs\Godot\4.7.2-stable\Godot_v4.7.2-stable_win64.exe" --headless --path . --export-debug "Android" build/android/Shatterfall.apk
+   ```
+3. Install it and start a log capture:
+   ```powershell
+   & "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" install -r build/android/Shatterfall.apk
+   ```
+   ```powershell
+   & "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" logcat -s godot:V > phase6_logcat.txt
+   ```
+4. Run the checklist below untethered for feel tests and connected for log capture. The game opens in the Hub.
 
 ## Gate 6 checklist — all items must pass to declare the slice done
 
@@ -29,6 +44,21 @@ Prerequisite: Phase 5 complete with Gate 5 green. This phase is **yours, not the
 - [ ] Echo assists read as backup, not autopilot; their cyan presentation and 1.0 s cue are unmistakable and never confused with telegraphs.
 - [ ] Grudge adaptation is noticeable in the boss fight but not oppressive; the +25% drop bias is visible in the Forge.
 - [ ] Crimson Guard ember ramp, Rogue swap flash, and Magi orb states all track gameplay as specced (AD2–AD4).
+
+**Hub, Reliquary and voice (D42, D43, AD8–AD10, AD13)**
+- [ ] The Hub fills the screen; hero cards, briefing and the bottom-right buttons are readable with thumbs and inside the safe area.
+- [ ] Forge tome: one-tap Absorb/Salvage works with a thumb; the at-cap warning makes sense; runes light as requirements are met; the evolution moment feels like a payoff.
+- [ ] Restoring a window feels rewarding (light, narrator line), and the unlock is noticeable in the next run.
+- [ ] Vespera's grudge lines and the narrator are readable, not spammy, and never cover a telegraph or a menu.
+- [ ] Rooms assembling from glass looks good and never delays the first wave awkwardly.
+
+**Echoes as partners (D41)**
+- [ ] Echo Conducting: tapping open ground during a cue is easy with a thumb, and the 1.0 s cue is long enough (open tunable #9).
+- [ ] Twin Reliquaries: possible for a first-time Brute without Echoes, satisfying with one (open tunable #10).
+
+**Camera (D3, Q-11)**
+- [ ] The isometric 3/4 view reads like the reference; the hero isn't too small at the 30 m boom (open tunable #12 — try 22–26 m).
+- [ ] "Stick up" always moves the hero up on screen.
 
 **Persistence**
 - [ ] Background the app mid-run: it auto-pauses (D29).
