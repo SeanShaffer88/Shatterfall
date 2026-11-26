@@ -1,0 +1,85 @@
+{
+	"schema_version": 1,
+	"_doc": "BLUEPRINT §2E–§2H, D19, D29, D30, D32, D33, D37. Times in seconds, distances in meters, speeds in m/s. Room indices are 0-based (Room 1 = index 0).",
+	"enemies": {
+		"CRAWLER": { "hp": 30, "move_speed": 2.0, "contact_damage": 8, "contact_interval": 1.0 },
+		"SPITTER": { "hp": 22, "hold_min": 5, "hold_max": 8, "retreat_speed": 1.6, "windup": 0.4, "projectile_speed": 9, "projectile_damage": 6, "fire_interval": 1.8 },
+		"BULWARK": { "hp": 60, "move_speed": 1.4, "turn_rate_deg": 120, "shield_arc_deg": 60, "shield_reduction": 0.5, "bash_reach": 1.8, "bash_damage": 12, "bash_telegraph": 0.8, "bash_cooldown": 3 }
+	},
+	"wave_rules": { "next_wave_delay": 1.0, "spawn_telegraph": 1.0, "min_spawn_distance": 6 },
+	"boons": [
+		{ "id": "CRIMSON_SURCHARGE", "name": "Crimson Surcharge", "effect": "damage_mult", "value": 0.12 },
+		{ "id": "GLASS_SKIN", "name": "Glass Skin", "effect": "max_hp_and_heal", "value": 15 },
+		{ "id": "TEMPEST_HEART", "name": "Tempest Heart", "effect": "move_and_attack_speed", "value": 0.10 },
+		{ "id": "AMBER_WARD", "name": "Amber Ward", "effect": "projectile_damage_taken_mult", "value": 0.15 },
+		{ "id": "SECOND_WIND", "name": "Second Wind", "effect": "once_heal_below", "value": 0.40, "threshold": 0.25 },
+		{ "id": "FRACTURE_FOCUS", "name": "Fracture Focus", "effect": "cooldown_mult", "value": 0.15 }
+	],
+	"stages": {
+		"stage_01_sunken_nave": {
+			"name": "The Sunken Nave",
+			"room_clear_heal": 0.15,
+			"boon_draft_before_room": 2,
+			"boon_offer_count": 3,
+			"rooms": [
+				{ "waves": [ [ { "enemy": "CRAWLER", "count": 3 }, { "enemy": "SPITTER", "count": 1 } ] ], "traps": [] },
+				{ "waves": [
+					[ { "enemy": "CRAWLER", "count": 4 } ],
+					[ { "enemy": "SPITTER", "count": 2 }, { "enemy": "CRAWLER", "count": 2 } ]
+				], "traps": [] },
+				{ "waves": [
+					[ { "enemy": "CRAWLER", "count": 2 }, { "enemy": "SPITTER", "count": 2 } ],
+					[ { "enemy": "BULWARK", "count": 1 }, { "enemy": "CRAWLER", "count": 3 } ]
+				], "traps": [ "SPIKE_A", "SPIKE_B", "SPIKE_C", "SPIKE_D" ] },
+				{ "waves": [
+					[ { "enemy": "SPITTER", "count": 3 }, { "enemy": "CRAWLER", "count": 2 } ],
+					[ { "enemy": "BULWARK", "count": 2 } ],
+					[ { "enemy": "CRAWLER", "count": 4 }, { "enemy": "SPITTER", "count": 2 } ]
+				], "traps": [] }
+			],
+			"traps": {
+				"spike": { "size": 2, "cycle": 4.0, "warning": 1.0, "active": 0.4, "damage": 10, "group_offset": 2.0 },
+				"groups": { "SPIKE_A": 0, "SPIKE_B": 1, "SPIKE_C": 0, "SPIKE_D": 1 }
+			},
+			"boss": {
+				"id": "VESPERA",
+				"hp": 1600,
+				"arena_size": 18,
+				"activation_delay": 1.5,
+				"move_speed": 1.2,
+				"keep_min": 4,
+				"keep_max": 8,
+				"immune": [ "STUN", "PULL", "KNOCKBACK" ],
+				"phases": [
+					{ "hp_at_or_below": 1.0, "attack_interval": 2.5, "sweep_telegraph": 0.9, "rain_telegraph": 1.2 },
+					{ "hp_at_or_below": 0.5, "attack_interval": 1.8, "sweep_telegraph": 0.65, "rain_telegraph": 0.9, "spawn_once": [ { "enemy": "CRAWLER", "count": 4 } ], "shard_wall_interval": 12 }
+				],
+				"attacks": {
+					"SWEEP": { "arc_deg": 120, "range": 5, "damage": 30 },
+					"SHARD_RAIN": { "zones": 3, "radius": 1.8, "scatter": 4, "damage": 10 },
+					"SHARD_WALL": { "length": 6, "thickness": 0.6, "distance_from_boss": 3, "duration": 5, "rise_telegraph": 0.6 }
+				},
+				"essence_id": "VESPERA_ESSENCE"
+			},
+			"drops": {
+				"room_drop_chance": 0.6,
+				"hero_class_weight": 60,
+				"other_class_weight": 40,
+				"grudge_bias": 1.25,
+				"rarity_weights": [ 70, 25, 5 ],
+				"room_drop_level": 1,
+				"boss_drop_level": 2
+			},
+			"stars": {
+				"BRUTE": { "id": "CLEAVE_MASTER", "name": "Cleave Master", "metric": "guard_uptime_fraction", "scope": "boss_fight", "threshold": 0.5 },
+				"ROGUE": { "id": "CLOSE_WORK", "name": "Close Work", "metric": "dagger_hits", "scope": "boss_fight", "threshold": 60 },
+				"MAGI": { "id": "UNTOUCHED_PRISM", "name": "Untouched Prism", "metric": "hp_lost", "scope": "room_1", "threshold": 0 }
+			},
+			"grudge": {
+				"BRUTE": { "id": "SPIKED_CARAPACE", "name": "Spiked Carapace", "params": { "recoil_fraction": 0.15, "min_hero_hp": 1 }, "tip": "Use ranged pressure and keep Crimson Guard up to soak recoil." },
+				"ROGUE": { "id": "MIRAGE_VEIL", "name": "Mirage Veil", "params": { "interval": 8, "blink_distance": 3 }, "tip": "Favor homing and area damage; her blinks restart attacks, never skip warnings." },
+				"MAGI": { "id": "RUNIC_DAMPENING", "name": "Runic Dampening", "params": { "radius_mult": 0.7, "duration_mult": 0.7 }, "tip": "Center area skills on her and lean on direct hits." }
+			}
+		}
+	}
+}

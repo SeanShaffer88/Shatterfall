@@ -392,6 +392,13 @@ res://
 │   ├── heroes.json           # Base stats, coeffs, skills, cadences, locks (§2D, D25, D27)
 │   ├── weapons.json          # Classes, hero-lock (D5), evolution lines (§2C), economy (D30/D31)
 │   └── stages.json           # Rooms, waves, traps, drops, stars, Vespera + grudge (§2E–H)
+├── systems/                  # Plain classes (class_name), no scene dependencies
+│   ├── Weapon.gd             # §2C data model
+│   ├── Inventory.gd          # Weapons, mains (D18), shards, essences
+│   ├── WeaponForge.gd        # Absorb / salvage / Build-Up + power math (§2C, D25, D31)
+│   ├── LootTable.gd          # Drop rolls + grudge bias (D19, D30)
+│   ├── DataLoader.gd         # Fail-loud JSON loading (D22)
+│   └── DataSchema.gd         # Field validators for data/*.json
 ├── scenes/
 │   ├── main/
 │   │   ├── MainHub.tscn      # Hero trio selector, Stage Briefing, Weapon Forge drawer
@@ -407,6 +414,7 @@ res://
 │   └── stained_glass_echo.gdshader
 └── tests/
     ├── test_core_systems.gd  # Runner (extends SceneTree), quit(0/1) (D38)
+    ├── lib/TestContext.gd    # Assertion collector
     └── phase_1/ … phase_5/   # Per-phase suites, all run by the runner
 ```
 

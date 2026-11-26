@@ -8,6 +8,11 @@ The agent appends questions here instead of inventing systems (`AGENTS.md`). The
 
 ## Answered
 
+### Q-7 — Where WeaponForge.gd and the package id live — Phase 1 — 2026-11-25
+Context: §3.2's tree had no home for `WeaponForge.gd` (it isn't an autoload), and `project.godot` has no package-id setting.
+Answer: plain classes go in `res://systems/` (now in the §3.2 tree). `project.godot` sets the display name and version from Phase 1; the package id `com.seanshaffer88.shatterfall` is an export-preset field, set in Phase 5 with `export_presets.cfg` (D40).
+Status: answered (2026-11-25), decided under the designer's delegation
+
 The six questions below came from the pre-implementation design review. The designer delegated these calls ("you decide everything"), and each answer is now a locked decision in `BLUEPRINT.md` §0.
 
 ### Q-1 — Skill aiming model — pre-Phase 1 — 2026-11-25

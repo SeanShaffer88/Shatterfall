@@ -1,0 +1,28 @@
+; Engine configuration file.
+; Shatterfall — Godot 4.7.2 stable (D22), Mobile renderer (D2/D39).
+
+config_version=5
+
+[application]
+
+config/name="Shatterfall"
+config/version="0.1.0"
+config/features=PackedStringArray("4.7", "Mobile")
+
+[autoload]
+
+SaveManager="*res://autoload/SaveManager.gd"
+GameState="*res://autoload/GameState.gd"
+
+[display]
+
+window/size/viewport_width=2400
+window/size/viewport_height=1080
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=4
+
+[rendering]
+
+renderer/rendering_method="mobile"
+renderer/rendering_method.mobile="mobile"

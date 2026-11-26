@@ -1,0 +1,77 @@
+{
+	"schema_version": 1,
+	"_doc": "BLUEPRINT §2D, D25, D27, D28. damage_l1 is the level-1 base-weapon value; coeff = damage_l1 / class base_atk (D25). lock_state: CASTING_SKILL | DASHING | INSTANT.",
+	"combat": {
+		"hit_invulnerability": 0.4,
+		"skill_input_buffer": 0.15,
+		"stop_velocity": 0.25,
+		"attack_grace": 0.08,
+		"input_deadzone": 0.18
+	},
+	"heroes": {
+		"BRUTE": {
+			"hp": 140,
+			"move_speed": 4.2,
+			"weapon_classes": ["GREATAXE"],
+			"primary": [
+				{ "id": "CLEAVE", "weapon_class": "GREATAXE", "damage_l1": 22, "hits": 1, "cadence": 0.9, "reach": 3.2, "params": { "arc_deg": 110 } }
+			],
+			"skills": [
+				{ "id": "LEAP_SLAM", "cooldown": 8, "lock": 0.45, "lock_state": "CASTING_SKILL", "recorded": true,
+					"damage": [ { "weapon_class": "GREATAXE", "damage_l1": 30, "hits": 1, "mode": "" } ],
+					"params": { "leap": 5, "radius": 2.5, "stun": 0.5 } },
+				{ "id": "RENDING_ROAR", "cooldown": 12, "lock": 0.3, "lock_state": "CASTING_SKILL", "recorded": true,
+					"damage": [],
+					"params": { "radius": 6, "enemy_damage_mult": 0.7, "duration": 5, "guard_stacks": 1 } },
+				{ "id": "VORTEX_CLEAVE", "cooldown": 15, "lock": 0.5, "lock_state": "CASTING_SKILL", "recorded": true,
+					"damage": [ { "weapon_class": "GREATAXE", "damage_l1": 45, "hits": 1, "mode": "" } ],
+					"params": { "radius": 7, "pull": 1 } }
+			],
+			"passive": { "id": "CRIMSON_GUARD", "params": { "stack_hp_pct": 0.10, "max_stacks": 3, "min_targets": 2, "decay_after": 6 } }
+		},
+		"ROGUE": {
+			"hp": 100,
+			"move_speed": 4.2,
+			"weapon_classes": ["DAGGERS", "SHORTBOW"],
+			"primary": [
+				{ "id": "DAGGER_FLURRY", "weapon_class": "DAGGERS", "damage_l1": 7, "hits": 2, "cadence": 0.5, "reach": 3.0, "params": { "mode_enter": 2.6, "mode_exit": 3.0 } },
+				{ "id": "BOW_ARROW", "weapon_class": "SHORTBOW", "damage_l1": 12, "hits": 1, "cadence": 0.55, "reach": 10.5, "params": {} }
+			],
+			"skills": [
+				{ "id": "SHADOW_VAULT", "cooldown": 7, "lock": 0.2, "lock_state": "DASHING", "recorded": false,
+					"damage": [],
+					"params": { "dash": 4, "invulnerability": 0.25, "next_dagger_bonus": 0.5 } },
+				{ "id": "ADAPTIVE_BARRAGE", "cooldown": 10, "lock": 0.4, "lock_state": "CASTING_SKILL", "recorded": true,
+					"damage": [
+						{ "weapon_class": "SHORTBOW", "damage_l1": 8, "hits": 5, "mode": "BOW" },
+						{ "weapon_class": "DAGGERS", "damage_l1": 10, "hits": 4, "mode": "DAGGERS" }
+					],
+					"params": {} },
+				{ "id": "SHATTER_MARK", "cooldown": 14, "lock": 0.15, "lock_state": "CASTING_SKILL", "recorded": true,
+					"damage": [],
+					"params": { "damage_taken_mult": 1.25, "duration": 8, "kill_heal": 10 } }
+			],
+			"passive": { "id": "RANGE_SWAP", "params": {} }
+		},
+		"MAGI": {
+			"hp": 110,
+			"move_speed": 4.2,
+			"weapon_classes": ["STAFF"],
+			"primary": [
+				{ "id": "PRISM_BOLT", "weapon_class": "STAFF", "damage_l1": 15, "hits": 1, "cadence": 0.7, "reach": 14, "params": { "homing": 1 } }
+			],
+			"skills": [
+				{ "id": "PHASE_BLINK", "cooldown": 6, "lock": 0, "lock_state": "INSTANT", "recorded": false,
+					"damage": [],
+					"params": { "distance": 4, "refresh_barrier": 1 } },
+				{ "id": "GRAVITY_WELL", "cooldown": 12, "lock": 0.2, "lock_state": "CASTING_SKILL", "recorded": true,
+					"damage": [ { "weapon_class": "STAFF", "damage_l1": 6, "hits": 1, "mode": "PER_SECOND" } ],
+					"params": { "radius": 3, "duration": 4, "cast_range": 8 } },
+				{ "id": "SHATTER_NOVA", "cooldown": 16, "lock": 0.3, "lock_state": "CASTING_SKILL", "recorded": true,
+					"damage": [ { "weapon_class": "STAFF", "damage_l1": 40, "hits": 1, "mode": "" } ],
+					"params": { "radius": 4, "knockback": 1 } }
+			],
+			"passive": { "id": "ARCANE_GLASS_BARRIER", "params": { "refresh": 6 } }
+		}
+	}
+}

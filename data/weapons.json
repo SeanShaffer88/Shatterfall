@@ -1,0 +1,52 @@
+{
+	"schema_version": 1,
+	"_doc": "BLUEPRINT §2C, D16, D17, D18, D25, D26, D31.",
+	"class_order": ["GREATAXE", "DAGGERS", "SHORTBOW", "STAFF"],
+	"classes": {
+		"GREATAXE": { "owner_hero": "BRUTE", "base_atk": 20, "shard_id": "GREATAXE_SHARD" },
+		"DAGGERS": { "owner_hero": "ROGUE", "base_atk": 6, "shard_id": "DAGGERS_SHARD" },
+		"SHORTBOW": { "owner_hero": "ROGUE", "base_atk": 11, "shard_id": "SHORTBOW_SHARD" },
+		"STAFF": { "owner_hero": "MAGI", "base_atk": 14, "shard_id": "STAFF_SHARD" }
+	},
+	"growth": {
+		"atk_per_level": 1.06,
+		"atk_per_stage": 1.20,
+		"atk_per_stack": 0.01,
+		"crit_base": 0.15,
+		"crit_per_stack": 0.01,
+		"crit_multiplier": 2.0,
+		"hp_per_stack": 2,
+		"substat_cap": 20,
+		"substat_order": ["ATK", "CRIT", "HP"]
+	},
+	"xp": {
+		"base": 40,
+		"growth": 1.3,
+		"level_cap": 10,
+		"per_fodder_level": 25,
+		"base_xp_by_rarity": [20, 35, 60]
+	},
+	"salvage": { "base_shards": 2 },
+	"evolutions": {
+		"GREATAXE": [
+			{ "stage": 1, "weapon_id": "ashen_cleaver", "name": "Ashen Cleaver" },
+			{ "stage": 2, "weapon_id": "cinderheart_maul", "name": "Cinderheart Maul", "req_level": 5, "shard_cost": 15, "boss_essence_id": "" },
+			{ "stage": 3, "weapon_id": "vesperglass_executioner", "name": "Vesperglass Executioner", "req_level": 10, "shard_cost": 40, "boss_essence_id": "VESPERA_ESSENCE" }
+		],
+		"DAGGERS": [
+			{ "stage": 1, "weapon_id": "nightbite_pair", "name": "Nightbite Pair" },
+			{ "stage": 2, "weapon_id": "whispershard_fangs", "name": "Whispershard Fangs", "req_level": 5, "shard_cost": 15, "boss_essence_id": "" },
+			{ "stage": 3, "weapon_id": "lamplighter_fangs", "name": "Lamplighter Fangs", "req_level": 10, "shard_cost": 40, "boss_essence_id": "VESPERA_ESSENCE" }
+		],
+		"SHORTBOW": [
+			{ "stage": 1, "weapon_id": "yewline_bow", "name": "Yewline Bow" },
+			{ "stage": 2, "weapon_id": "vinewhisper_bow", "name": "Vinewhisper Bow", "req_level": 5, "shard_cost": 15, "boss_essence_id": "" },
+			{ "stage": 3, "weapon_id": "choirglass_bow", "name": "Choirglass Bow", "req_level": 10, "shard_cost": 40, "boss_essence_id": "VESPERA_ESSENCE" }
+		],
+		"STAFF": [
+			{ "stage": 1, "weapon_id": "lorelight_rod", "name": "Lorelight Rod" },
+			{ "stage": 2, "weapon_id": "prismheart_staff", "name": "Prismheart Staff", "req_level": 5, "shard_cost": 15, "boss_essence_id": "" },
+			{ "stage": 3, "weapon_id": "reliquary_nova_staff", "name": "Reliquary Nova Staff", "req_level": 10, "shard_cost": 40, "boss_essence_id": "VESPERA_ESSENCE" }
+		]
+	}
+}
