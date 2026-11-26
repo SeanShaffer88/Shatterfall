@@ -9,7 +9,7 @@
 ## 1. Per-Hero Look (silhouette-first, AD1–AD4)
 
 ### AD1 — Silhouette-first rule
-At a fixed 40°-pitch top-down camera on a phone screen, recognition comes from **helm shape, shoulder line, and weapon profile** — not surface detail. Design each hero so their black silhouette is unmistakable in a single-color test. Surface detail budget stays near zero in the slice; time spent on micro-detail before Phase 5 is wasted.
+At the fixed isometric 3/4 camera (55° pitch, 45° yaw, D3) on a phone screen, recognition comes from **helm shape, shoulder line, and weapon profile** — not surface detail. Design each hero so their black silhouette is unmistakable in a single-color test. Surface detail budget stays near zero in the slice; time spent on micro-detail before Phase 5 is wasted.
 
 ### AD2 — Brute: charred plate, ember cracks
 Charred, layered plate with bone/scale edges; jagged asymmetric silhouette; horned/crested helm profile. **Combat tie:** cracks in the armor plate glow with crimson ember light proportional to **Crimson Guard** charge — dim when shielded at 10%, fully lit at the 30% cap, dark when broken. This is the shield's primary readability channel (verify in Gate 3 that the emissive intensity tracks the Guard value).
@@ -26,7 +26,7 @@ Tall, broad angular headdress carried low and wide for the single most readable 
 The canonical palette is obsidian/charcoal (`#121318`, `#2A2C33` stone) pierced by light: crimson `#D92638`, amber `#E8912D` (tunable), violet `#8F4FD4` (tunable), and by rule **AD6**, cold cyan for ghosts. Living heroes speak only warm light: Brute crimson, Rogue gold, Magi violet/amber.
 
 ### AD6 — Echoes are always cold cyan
-All Spectral Echo rendering uses cold cyan glass light (`#5FD4E6`, tunable), even when an echo inherits a warm-weapon effect. Players must be able to distinguish "ally now" from "ghost of my past run" with zero text. The 0.5 s pre-cast ground cue (D35) is cyan too, so it can never be mistaken for an AD7 crimson-white telegraph. **Combat tie:** verify in Gate 4 that echo VFX overrides the inherited weapon's warm palette.
+All Spectral Echo rendering uses cold cyan glass light (`#5FD4E6`, tunable), even when an echo inherits a warm-weapon effect. Players must be able to distinguish "ally now" from "ghost of my past run" with zero text. The 1.0 s pre-cast ground cue (D35) is cyan too, so it can never be mistaken for an AD7 crimson-white telegraph. **Combat tie:** verify in Gate 4 that echo VFX overrides the inherited weapon's warm palette.
 
 ### AD7 — Telegraphs outrank ambience
 Every enemy telegraph (decal or glow) renders in a shared alarm language — crimson-white ramp — that takes render priority over all decorative lighting. Stained-glass shafts, candle pools, and hero glows never share the telegraph's exact hue-and-value. Readability of dodge cues outranks beauty in every conflict.
@@ -41,6 +41,9 @@ The Weapon Forge drawer renders as an **open illuminated tome**: each two-page s
 
 ### AD10 — Evolution is a liturgical moment
 On Build-Up evolution: rise from dais → screen washes to stained-glass light → evolved weapon returns with its new mesh/glow preset. One shared moment for all four weapon classes, parameterized per class. Slated for Phase 5; the state hook (`weapon_id` mutation) already exists in Phase 1.
+
+### AD13 — Shatterfall: the world assembles from glass (D43)
+When a room starts, its floor and walls rise from falling glass shards over 0.6 s; the Hub's windows re-form shard by shard when restored (D42). This is the game's visual signature and the meaning of its name. Emissive shards and a vertex shader only: no particles beyond the AD12 budget, and never during an active telegraph.
 
 ## 4. Rendering & Budget Guards (AD11–AD12)
 
@@ -62,4 +65,4 @@ Per-frame art cost targets on Galaxy S24 Ultra (D8): each hero ≤ 1 custom emis
 | Rogue swap-trim flash | 0.15 s | yes |
 | Crimson Guard ember ramp | linear 10%→30% | yes |
 
-**Gate hooks added by this document:** Gate 2 — Rogue swap flash fires on weapon-class change (AD3). Gate 3 — Brute emissive tracks Crimson Guard value (AD2); Magi orb brightness tracks barrier status (AD4). Gate 4 — echo VFX forces cold cyan over inherited warm weapon palettes (AD6). Gate 5 — hub dais weapon glow encodes evolution stage (AD9); Forge rune ignition state matches recipe progress (AD8).
+**Gate hooks added by this document:** Gate 5 — AD13 assembly finishes before a room's first wave telegraph. Gate 2 — Rogue swap flash fires on weapon-class change (AD3). Gate 3 — Brute emissive tracks Crimson Guard value (AD2); Magi orb brightness tracks barrier status (AD4). Gate 4 — echo VFX forces cold cyan over inherited warm weapon palettes (AD6). Gate 5 — hub dais weapon glow encodes evolution stage (AD9); Forge rune ignition state matches recipe progress (AD8).

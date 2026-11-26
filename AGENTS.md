@@ -1,7 +1,7 @@
 # AGENTS.md — Session Rules for the Coding Agent (Claude Code / Codex / Cursor)
 
 ## Source of truth
-- `BLUEPRINT.md` is the **normative** spec. The Decision Log (`BLUEPRINT.md` §0, D1–D40) is locked: do not change any decision without first asking, and never without updating the Decision Log entry in the same change.
+- `BLUEPRINT.md` is the **normative** spec. The Decision Log (`BLUEPRINT.md` §0, D1–D43) is locked: do not change any decision without first asking, and never without updating the Decision Log entry in the same change.
 - Numbers in tables are tuned starting points ("tunable"). You may implement them exactly as written; you may not invent replacements.
 
 ## Phase discipline

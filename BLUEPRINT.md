@@ -14,7 +14,7 @@
 |---|----------|----------|
 | D1 | Orientation | **Landscape.** Base resolution 2400×1080, `canvas_items` stretch, aspect `expand`. **Two-thumb** layout: virtual stick bottom-left, 3 skill buttons bottom-right. |
 | D2 | Renderer | **Mobile renderer** (Vulkan) for **all** builds, including Windows dev builds, so lighting and art are always judged on the shipping renderer. *(rev. D39)* |
-| D3 | Camera | Fixed follow top-down: pitch **40°**, boom length **11 m**, FOV 45°, target lock with 0.15 s smoothing. No player zoom, no rotation. |
+| D3 | Camera | Fixed **isometric 3/4** follow: yaw **45°**, pitch **55°**, boom length **30 m**, FOV **30°** (flat, long-lens look; reference: Hunt Royale boss hunts), target lock with 0.15 s smoothing. No player zoom, no rotation. Stick input is turned by the yaw so "up" is up on screen. *(rev. Q-11)* |
 | D4 | Dimension / units | Full 3D (`CharacterBody3D`, `Area3D`, `Vector3`). All tuning in **meters and m/s**. No 2D px/s units anywhere. |
 | D5 | Weapon binding | **Hero-locked weapons.** Brute = Greataxe, Rogue = Daggers *and* Shortbow (two classes, both Rogue-only; mode switches with range), Magi = Staff. Off-class drops are marked "Not usable" in inventory and can only be salvaged. |
 | D6 | Run length | Target **6–9 minutes** per full stage run (4 rooms + boss). |
@@ -46,12 +46,15 @@
 | D32 | Vespera | Full sheet in §2E. 1600 HP; immune to stun, pull and knockback. Fight = boss activation (1.5 s after the door locks behind the hero) → boss death. Adaptation semantics in §2H. **Mirage Veil is a fair challenge:** the blink restarts the active telegraph from the new position with full warning time — the attack is delayed, never unwarned. |
 | D33 | Enemies & traps | Full sheet in §2E (contact rate, projectile speed, Bulwark bash, spawn rules, trap cycle). |
 | D34 | Echo recording | Recorded skills: Leap Slam, Rending Roar, Vortex Cleave, Adaptive Barrage, Shatter Mark, Gravity Well, Shatter Nova. Shadow Vault and Phase Blink (movement-only) are not recorded. Events are **wave-relative** (`room`, `wave`, `t` = seconds since that wave spawned; boss phase 1 = wave 0, phase 2 = wave 1). Positions are room-local, relative to each room's `EchoAnchor` (`Marker3D`). Keep the first 2 casts per wave. One file per stage, keyed by hero; no `client_version` field. |
-| D35 | Echo playback | Per-skill behavior table in §2B. Values (damage, heal, durations) ×0.65; radii, pulls and knockback unchanged; echoes never crit. A cyan ground cue appears 0.5 s before each echo cast. At most 2 echo actors at once: extra events wait up to 1.5 s, then drop. If the wave ends before `t`, the event drops. Grudge adaptations apply to echo hits; recoil is ignored (echoes have no HP). |
+| D35 | Echo playback | Per-skill behavior table in §2B. Values (damage, heal, durations) ×0.65; radii, pulls and knockback unchanged; echoes never crit. A cyan ground cue appears **1.0 s** before each echo cast *(rev. D41: room to conduct it)*. At most 2 echo actors at once: extra events wait up to 1.5 s, then drop. If the wave ends before `t`, the event drops. Grudge adaptations apply to echo hits; recoil is ignored (echoes have no HP). |
 | D36 | Time rule | Every gameplay timer (cooldowns, statuses, wave/room elapsed, echo `t`) accumulates the `delta` passed to `_physics_process`, which `Engine.time_scale` scales. Hit-stop therefore pauses all of them proportionally in both recording and playback, so echo timing is consistent by construction. Nothing gameplay-relevant uses wall-clock time. |
 | D37 | Stars (Stage 1) | Cleave Master: Crimson Guard active ≥ **50%** of the fight. Close Work: ≥ **60 dagger hits** in the fight (each flurry = 2 hits). Untouched Prism: Room 2 from entry to door unlock with **zero HP loss** (hits fully absorbed by the Arcane Glass Barrier do not count). Rending Roar grants one Crimson Guard stack. |
 | D38 | Test tooling | Before tests on a fresh clone, run `godot --headless --path . --import` — verified on 4.7.2: without it, `class_name` lookups fail. Autoloads are present in `root` under `-s` after import (verified). The runner `res://tests/test_core_systems.gd` extends `SceneTree`, runs the suites under `tests/phase_N/` and exits with `quit(0)` / `quit(1)`. Physics-dependent tests step logic with a fixed 1/60 s delta, never wall time. On Windows, call the main `Godot_v4.7.2-stable_win64.exe` with `--headless` (the `_console` wrapper failed with CreateProcess error 193 in the agent sandbox). |
 | D39 | Desktop renderer | See D2: Mobile renderer everywhere. Forward+ only for one-off comparisons, never for art or performance sign-off. |
 | D40 | Export ownership | Phase 5 creates `export_presets.cfg`: Android (arm64-v8a only, sensor-landscape, D24 identity, debug keystore from editor settings) and a Windows dev preset. Keystores and signing passwords are never committed (`.gitignore`). Phase 6 prerequisites: Godot 4.7.2 export templates, OpenJDK 17, Android SDK as listed in the Godot 4.7 export docs. |
+| D41 | Pillar 1 — Echoes as partners | Echoes are the game's signature: **co-op with your own past runs**. (a) **Echo Conducting** (Battleheart-style): the Echo cue lasts **1.0 s** (rev. D35); tapping open arena ground (not a HUD control) during a cue moves that Echo's cast to the tapped point, up to 6 m from the resolved point. One conduct per Echo. (b) **Twin Reliquaries** (raid-style two-body mechanic, §2B): in phase 2 Vespera raises two glass pillars 10 m apart every 20 s; both must be struck within 1.5 s of each other, within 6 s, or she gains **Shatter Shield** (−75% damage taken for 8 s). Solo play can solve it with ranged attacks or Leap Slam; an Echo hit counts as one of the two strikes. Failing is never fatal. Built in Phase 4. |
+| D42 | Pillar 2 — Restore the Reliquary | The Hub (Phase 5) is a shattered cathedral rebuilt between runs, instead of chests or cards. New currency **Glass**: +3 per room cleared, +10 per Vespera kill, +1 per salvage; kept on death (D10). Six windows restored in order (§2I), each with a real, permanent unlock. Window costs 20 / 40 / 60 / 80 / 100 / 150 Glass (450 total ≈ 20 runs, matching D31 pacing). Restored windows pour stained-glass light into the Hub and are saved in `user://save.json`. |
+| D43 | Pillar 3 — A world with a voice | Text barks, no voice-over in the slice. **Vespera** speaks her grudge (lines keyed to the last clearing hero and adaptation; run start, phase 2, first adaptation trigger, hero death, her defeat). **The Reliquary** narrates sparingly (first run, first evolution, each restored window, deaths, about one room clear in three). Lines live in `data/barks.json`; at most one line per 12 s; shown 3 s bottom-center, above the controls; never covers a telegraph; skipped when the same line played within the last 3 runs. Rooms **assemble from falling glass** as you approach (AD13). Built in Phase 5. |
 
 Numbers marked "tunable" are starting points for one 6–9 minute run; tune by playtest, never silently.
 
@@ -73,7 +76,7 @@ Numbers marked "tunable" are starting points for one 6–9 minute run; tune by p
 2. **Room Clearing & Boon Draft:** move freely to dodge telegraphed attacks; **stop moving to auto-attack** the nearest enemy in reach. Clear waves room by room (HP carries over, 15% heal per room clear — D29); before Room 3, draft **1 of 3 run boons**.
 3. **The Three Signature Hooks:**
    - **Hero-Specific Stars (D7, D37).**
-   - **Spectral Echo Assists:** successful clears record your skill casts as a lightweight ghost timeline. Replaying the stage with a *different* hero spawns translucent cyan Echoes that re-cast those skills at the recorded wave-relative moments, each announced by a 0.5 s ground cue so you can combo off them (§2B).
+   - **Spectral Echo Assists:** successful clears record your skill casts as a lightweight ghost timeline. Replaying the stage with a *different* hero spawns translucent cyan Echoes that re-cast those skills at the recorded wave-relative moments, each announced by a 1.0 s ground cue so you can combo off them or **conduct** them to a new spot (D41). Vespera's Twin Reliquaries need two bodies — you and an Echo (§2B).
    - **Boss Grudge & Adaptation (D11):** clearing Vespera with a hero installs one defensive adaptation against that archetype and boosts drops for the other two.
 4. **Same-Type Absorption & Build-Up Forge (D5, D26, D31):** weapons never break. Same-class drops can be **Absorbed** (XP + a small permanent sub-stat) or **Salvaged** (class shards) to reach linear **Build-Up** evolutions (§2C).
 
@@ -214,7 +217,7 @@ func _execute_primary_attack() -> void:
 
 **Rogue swap rule (normative, D28):** Bow→Daggers when the nearest enemy is `<= 2.6 m`; Daggers→Bow when it is `> 3.0 m`; no attack beyond 10.5 m (walk closer). The first evaluation of a run starts in Bow mode. Every mode change emits `rogue_mode_changed` exactly once.
 
-**Camera rig (D3):** `Camera3D` on a boom parenting the hero: pitch −40°, distance 11 m, FOV 45°, position lerp 0.15 s, fixed orientation. Verify the hero and the bottom UI never overlap at 2400×1080 and at 19.5:9 (S24 Ultra native is 3120×1440; test 16:9 and 19.5:9 crops).
+**Camera rig (D3):** a top-level pivot turned 45° about the vertical follows the hero (0.15 s smoothing); its `Camera3D` sits on a 30 m boom at pitch −55°, FOV 30°, fixed orientation. `HeroInput` rotates screen-space input by −45° before it reaches `input_vector`, so this §2A code stays world-space. Verify the hero and the bottom UI never overlap at 2400×1080 and at 19.5:9 (S24 Ultra native is 3120×1440; test 16:9 and 19.5:9 crops).
 
 ### B. Spectral Echo System (`EchoDirector.gd`)
 
@@ -241,12 +244,12 @@ Intent-anchored keyframes, not frame recording.
 ```
 `weapon_id` is informational only (D21).
 
-**Playback (normative, D35):** while hero X plays, `EchoDirector` loads the saved entries of the **other two** heroes. For the active (room, wave), when `wave_elapsed >= t − 0.5` it resolves the target:
+**Playback (normative, D35):** while hero X plays, `EchoDirector` loads the saved entries of the **other two** heroes. For the active (room, wave), when `wave_elapsed >= t − 1.0` it resolves the target:
 1. the nearest living enemy within **3.5 m** of the recorded target point; else
 2. the nearest living enemy in the room within the skill's reach of the recorded position; else
 3. skip the event silently.
 
-It then shows a 0.5 s cyan ground cue at the resolved point, and at `t` spawns a `SpectralEcho` actor (translucent stained-glass Fresnel shader, **cold cyan only** — AD6) that casts the skill and dissolves into glass shards. At most 2 echo actors exist at once; a third event waits up to 1.5 s for a slot, then drops. If the wave ends before `t`, the event drops. Echoes fire in the boss room too. Players with no saved echoes from other heroes see "No echoes yet — clear this stage with another hero" in the Stage Briefing.
+It then shows a 1.0 s cyan ground cue at the resolved point, and at `t` spawns a `SpectralEcho` actor (translucent stained-glass Fresnel shader, **cold cyan only** — AD6) that casts the skill and dissolves into glass shards. At most 2 echo actors exist at once; a third event waits up to 1.5 s for a slot, then drops. If the wave ends before `t`, the event drops. Echoes fire in the boss room too. Players with no saved echoes from other heroes see "No echoes yet — clear this stage with another hero" in the Stage Briefing.
 
 **Echo effects (×0.65 values; radii/pull/knockback unchanged; never crit; resolved against the recording hero's current weapon — D21):**
 
@@ -261,6 +264,10 @@ It then shows a 0.5 s cyan ground cue at the resolved point, and at `t` spawns a
 | Shatter Nova | 4 m nova, 65% damage, knockback (bosses immune to knockback). |
 
 Echo damage and kills are **excluded from star tracking** (D9). Grudge adaptations apply to echo hits, except Spiked Carapace recoil (echoes have no HP).
+
+**Echo Conducting (D41):** while a cue is showing (1.0 s), a tap on open arena ground — not on the stick, a skill button or another HUD control — moves that Echo's cast point to the tap, clamped to 6 m from the resolved point. The cue ring turns gold to confirm. One conduct per Echo; a conducted Echo ignores smart snap. Conducting never changes damage, timing or star rules (D9).
+
+**Twin Reliquaries (D41):** in phase 2, every 20 s Vespera raises two glass pillars on opposite sides of the arena, 10 m apart, each with a 6 s AD7 countdown ring. Each pillar breaks on any single hit (hero or Echo, melee or ranged). Breaking both within 1.5 s of each other within the 6 s shatters them harmlessly. Otherwise Vespera gains **Shatter Shield** for 8 s (−75% damage taken; stacks never, refreshes). Pillars are targetable enemies for auto-attack and Echo snap, but never count toward stars. Tunables: interval, spacing, window, shield %, shield duration.
 
 **Time rule (D36):** all echo timers use scaled physics `delta`. An `Engine.time_scale` hit-stop dip during recording or playback shifts nothing in game time, so an event recorded at `t` fires at game-time `t` (± one physics tick) regardless of dips in either run.
 
@@ -368,6 +375,25 @@ Adaptations apply to echo hits as well (recoil excepted — D35). Drops are bias
 
 ---
 
+### I. Restore the Reliquary (D42) — Phase 5 Hub
+
+The Hub is a shattered cathedral. Six windows are restored in order with **Glass** (D42); each one lights part of the nave and grants one permanent unlock. All numbers tunable.
+
+| # | Window | Glass | Unlock |
+|---|---|---|---|
+| 1 | Lantern Window | 20 | Room-clear heal 15% → 20% |
+| 2 | Choir Window | 40 | Echo cap 2 → 3 casts per wave (D34) |
+| 3 | Ember Window | 60 | Boon draft offers 4 instead of 3 |
+| 4 | Ledger Window | 80 | Room drop chance 60% → 70% (D19) |
+| 5 | Forge Window | 100 | Stage 3 evolutions cost 30 shards instead of 40 (D31) |
+| 6 | Vesper Window | 150 + 1 Vespera essence | The slice's ending: Vespera's final line, the dais's full bloom (AD9) and a "Reliquary restored" title on the save |
+
+Glass is earned and saved at the same moments as drops (D29): room clear (+3), Vespera kill (+10), salvage (+1). Restoration happens only in the Hub (like D20). The Hub shows the next window's cost and unlock in plain English.
+
+### J. Barks and the narrator (D43) — Phase 5
+
+`data/barks.json` holds every line, keyed by speaker (`VESPERA`, `RELIQUARY`), trigger and optional hero/adaptation. A `BarkDirector` picks lines with the boon RNG stream (D25), shows one at a time for 3 s bottom-center, respects the 12 s spacing and the 3-run repeat filter, and never draws over a telegraph's screen area. Vespera's grudge lines name the hero who last beat her ("You again, Brute. I grew spines for you."). The slice ships at least 4 lines per Vespera trigger and 3 per Reliquary trigger, all plain English.
+
 ## 3. Agent Workflow Blueprint — WFBP: Shatterfall, Godot 4.7 Vertical Slice
 
 > Hand this section (and everything above it) to the coding agent as-is. Do **not** wrap it in an outer markdown fence — earlier drafts broke because of nested triple backticks.
@@ -445,11 +471,11 @@ res://
 **Phase 3 — Dungeon Loop, Boon Draft, Boss Grudge.** `Stage01_Nave.tscn` with waves, spawn rules and traps per §2E, enemies per D33, 1-of-3 Boon modal before Room 3 (§2F), `BossVespera.tscn` per D32, Grudge per §2H/D11, run flow per D29.
 *Gate 3 (headless):* doors unlock only on last-wave clear; room-clear heal and HP carry-over; each boon applies for the run only; Vespera clear installs exactly one adaptation keyed to the clearing hero and the bias flips across two consecutive clears by different heroes; Mirage Veil restarts telegraphs with full warning time; boss ignores stun/pull/knockback; D37 star conditions evaluated deterministically and persisted on victory only; death and abandon follow D10/D29; drops are saved at each room clear.
 
-**Phase 4 — Spectral Echoes.** `EchoDirector.gd` per §2B/D34/D35/D36.
-*Gate 4 (headless):* a recorded Brute run spawns a functional Leap Slam echo in a later Rogue run in the same room/wave at `t` (cue at `t − 0.5`); target resolution order (3.5 m → room → skip); per-wave cap of 2 and per-hero overwrite; ≤ 2 concurrent actors with 1.5 s wait/drop; wave-ended drop; ×0.65 values and no crits; D21 inheritance; star isolation; echo timing identical in game time with and without a simulated `time_scale` dip; serialization round-trip.
+**Phase 4 — Spectral Echoes.** `EchoDirector.gd` per §2B/D34/D35/D36, Echo Conducting and Vespera's Twin Reliquaries (D41).
+*Gate 4 (headless):* a recorded Brute run spawns a functional Leap Slam echo in a later Rogue run in the same room/wave at `t` (cue at `t − 1.0`); target resolution order (3.5 m → room → skip); per-wave cap of 2 and per-hero overwrite; ≤ 2 concurrent actors with 1.5 s wait/drop; wave-ended drop; ×0.65 values and no crits; D21 inheritance; star isolation; echo timing identical in game time with and without a simulated `time_scale` dip; serialization round-trip; a tap during a 1.0 s cue moves that Echo's cast (clamped to 6 m, once), a tap on a HUD control does not; Twin Reliquaries: both pillars within 1.5 s shatter them, a miss grants an 8 s −75% Shatter Shield, an Echo strike counts, pillars never feed stars.
 
-**Phase 5 — Main Hub UI & Polish.** `MainHub.tscn`: 3 hero cards (weapon rarity + evolution stage, stars, Grudge warning + counter tip), Stage Briefing, Forge drawer (1-tap Absorb/Salvage, evolution nodes, D13 unlock gate, at-cap XP warning), run summary with star progress, floating damage numbers, hit-stop per D36, stained-glass lighting within the mobile perf budget, `export_presets.cfg` per D40.
-*Gate 5 (headless + scene):* hub flows (brief → commit → run → summary → hub) complete with no orphaned state, including death and abandon paths; Forge locked before the first boss kill; UI Forge actions match Phase 1 core results; export preset values match D24/D40.
+**Phase 5 — Main Hub UI & Polish.** `MainHub.tscn`: 3 hero cards (weapon rarity + evolution stage, stars, Grudge warning + counter tip), Stage Briefing, Forge drawer (1-tap Absorb/Salvage, evolution nodes, D13 unlock gate, at-cap XP warning), run summary with star progress, floating damage numbers, hit-stop per D36, stained-glass lighting within the mobile perf budget, `export_presets.cfg` per D40; **Restore the Reliquary** (§2I, D42: Glass economy, six windows and their unlocks); **barks and narrator** (§2J, D43); rooms assembling from falling glass (AD13).
+*Gate 5 (headless + scene):* hub flows (brief → commit → run → summary → hub) complete with no orphaned state, including death and abandon paths; Forge locked before the first boss kill; UI Forge actions match Phase 1 core results; export preset values match D24/D40; Glass earned and saved per D42 (kept on death); windows restore only in order and only with enough Glass; each unlock changes its rule (heal, Echo cap, draft size, drop chance, Stage 3 cost); BarkDirector spacing, repeat filter and grudge-keyed line selection.
 
 **Phase 6 — Device Verification (manual, not headless).**
 *Gate 6 checklist (Galaxy S24 Ultra, adb logging):* stable 60 fps in Room 4 and the boss fight; telegraphs readable at 2400×1080 and 19.5:9; two-thumb reach: stick never conflicts with skill buttons; echo actors and cues visible but never occluding enemy telegraphs; a full run starts and ends with zero errors in `adb logcat`; background/force-kill behave per D29; battery/heat sane over 3 back-to-back runs.
@@ -469,6 +495,9 @@ On Windows use `Godot_v4.7.2-stable_win64.exe` for `godot`. All assertions (hero
 3. Rogue bow 10.5 m reach vs. Spitter 5–8 m band (kiting window); 2.6/3.0 m hysteresis feel.
 4. Boon magnitudes (±12%/±15% classes) vs. 4-room difficulty curve; 15% room-clear heal.
 5. Vespera 1600 HP vs. level-1 weapons: target ~2.5–3 min fight.
-6. Echo 65% potency and the 0.5 s cue: should feel like backup, never autopilot.
+6. Echo 65% potency and the 1.0 s cue: should feel like backup, never autopilot.
 7. Close Work 60-hit threshold vs. Spiked Carapace recoil when the last clear was the Brute.
 8. Forge pacing (D31): Stage 2 ≈ 5 own-hero clears, Stage 3 ≈ 20; Rogue's two classes level about half as fast.
+9. Echo Conducting (D41): is a 1.0 s cue long enough to tap with a thumb, and is 6 m the right reach?
+10. Twin Reliquaries (D41): can a first-time Brute solve it without an Echo? Tune spacing and window until it's possible but satisfying with one.
+11. Glass pacing (D42): ~20 runs to restore all six windows; check against D31 and how long players stay.

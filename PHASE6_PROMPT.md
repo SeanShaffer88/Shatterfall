@@ -26,7 +26,7 @@ Prerequisite: Phase 5 complete with Gate 5 green. This phase is **yours, not the
 
 **Systems feel (D6, D9, D11, D12, §4 Open Tunables)**
 - [ ] A full run lands in the 6–9 minute target; Vespera ~2.5–3 min at level-1 weapons.
-- [ ] Echo assists read as backup, not autopilot; their cyan presentation and 0.5 s cue are unmistakable and never confused with telegraphs.
+- [ ] Echo assists read as backup, not autopilot; their cyan presentation and 1.0 s cue are unmistakable and never confused with telegraphs.
 - [ ] Grudge adaptation is noticeable in the boss fight but not oppressive; the +25% drop bias is visible in the Forge.
 - [ ] Crimson Guard ember ramp, Rogue swap flash, and Magi orb states all track gameplay as specced (AD2–AD4).
 

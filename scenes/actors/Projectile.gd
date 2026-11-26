@@ -7,6 +7,7 @@ extends Area3D
 
 const ENEMY_BODY_RADIUS := 0.5
 const HOMING_TURN_RATE := 9.0   # rad/s
+const BLOCKER_GROUP := "projectile_blockers"   # nodes with blocks(point, radius) -> bool
 
 var kind: String = ""
 var speed: float = 20.0
@@ -75,6 +76,10 @@ func tick(delta: float) -> void:
 	var move := direction * speed * delta
 	global_position += move
 	_travelled += move.length()
+	for blocker in get_tree().get_nodes_in_group(BLOCKER_GROUP):
+		if blocker.blocks(global_position, radius):
+			queue_free()
+			return
 	for e in Combat.living_enemies(get_tree()):
 		if Combat.flat_distance(global_position, e.global_position) <= radius + ENEMY_BODY_RADIUS:
 			if on_hit.is_valid():

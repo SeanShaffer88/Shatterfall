@@ -4,7 +4,7 @@ Solo-Hero Action Dungeon Crawler / Weapon-Evolution RPG. Godot 4.7.2 stable (pin
 
 ## Documents
 
-- [BLUEPRINT.md](BLUEPRINT.md) — normative design + build spec. §0 Decision Log (D1–D40) is locked.
+- [BLUEPRINT.md](BLUEPRINT.md) — normative design + build spec. §0 Decision Log (D1–D43) is locked.
 - [ART_DIRECTION.md](ART_DIRECTION.md) — locked visual language addendum (AD1–AD12) with per-hero emissive rules and gate hooks.
 - [AGENTS.md](AGENTS.md) — session rules for the coding agent (phase discipline, test integrity, scope locks).
 - [QUESTIONS.md](QUESTIONS.md) — ambiguity log; the agent files questions here instead of inventing systems.
@@ -28,6 +28,12 @@ Windowed playtest bot (real renderer; plays one hero through walk → attack →
 
 ```bash
 godot --path . --resolution 1200x540 -s res://tests/tools/playtest_bot.gd -- --hero=ROGUE --out=<folder>
+```
+
+Full-run autopilot (walks, fights, takes a boon, fights Vespera; logs events and screenshots):
+
+```bash
+godot --path . --resolution 1200x540 -s res://tests/tools/run_bot.gd -- --hero=MAGI --out=<folder> --speed=3
 ```
 
 Headless gates verify logic only; Phase 6 is a manual on-device checklist (Galaxy S24 Ultra, 60 fps target).

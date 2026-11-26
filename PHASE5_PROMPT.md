@@ -17,16 +17,21 @@ Working from `AGENTS.md` rules, `BLUEPRINT.md`, and `ART_DIRECTION.md` AD5–AD1
 3. **Hub dais (AD9):** center the scene on the committed hero's weapon plunged into a stained-glass dais ringed by candles; the blade's glow color/intensity encodes evolution stage (Base = dim smoky, Stage 2 = brighter, Stage 3 = full radiant bloom; rarity as rim tint). Assert the glow state matches the `weapons.json` state in Gate 5.
 4. **Evolution moment (AD10):** Build-Up evolution plays the shared liturgical sequence (rise from dais → stained-glass wash → evolved weapon returns with new mesh/glow preset); parameterized per class; driven by the Phase 1 `weapon_id` mutation hook.
 5. **Polish within budget (AD11/AD12, D8):** floating damage/rupture numbers; hit-stop as an `Engine.time_scale` micro-dip **only** on heavy non-skill crits, consistent with the D36 time rule (gate-test it now); run summary with progress toward unmet stars; procedural stained-glass lighting must respect the AD12 perf caps (≤ 1 custom emissive light per hero, ≤ 2 visible echo actors, no dynamic character shadows in-run).
-6. Global visual rules to enforce in-scene (AD5–AD7): living heroes warm-only (Brute crimson / Rogue gold / Magi violet-amber), echoes cold cyan only, telegraphs crimson-white and always rendered above decorative light.
-7. Extend the Gate tests (hand-rolled `SceneTree`, D22):
+6. **Restore the Reliquary (§2I, D42):** the Hub is a shattered cathedral with six windows restored in order with Glass (+3 per room clear, +10 per Vespera kill, +1 per salvage, kept on death, saved with drops). Each window lights the nave and applies its unlock (room-clear heal 20%, Echo cap 3, 4 boon offers, 70% room drops, Stage 3 cost 30 shards, and the slice ending). Show the next window's cost and unlock in plain English.
+7. **Barks and narrator (§2J, D43):** `data/barks.json` (fail-loud like other data, D22) and a `BarkDirector`: one line at a time, 3 s, bottom-center above the controls, 12 s spacing, 3-run repeat filter, never over a telegraph. Vespera's grudge lines are keyed to the last clearing hero and adaptation.
+8. **Glass assembly (AD13):** each room's floor and walls rise from falling glass shards when it starts (0.6 s, emissive-only, within AD12).
+9. Global visual rules to enforce in-scene (AD5–AD7): living heroes warm-only (Brute crimson / Rogue gold / Magi violet-amber), echoes cold cyan only, telegraphs crimson-white and always rendered above decorative light.
+10. Extend the Gate tests (hand-rolled `SceneTree`, D22):
    - Hub flow (brief → commit → run → summary → hub) completes with no orphaned/save-corrupting state across a full run loop, including a death path (D10).
    - Forge drawer is locked before the first Vespera kill and unlocks after (D13); UI absorb/salvage calls yield identical results to the Phase 1 core functions (D16–D19).
    - AD8 rune ignition state matches recipe progress; AD9 dais glow matches evolution stage; AD10 sequence fires exactly once per evolution.
+   - Glass: earned and saved per D42 and kept on death; windows restore in order only with enough Glass; each unlock changes its rule.
+   - BarkDirector: spacing, repeat filter, grudge-keyed selection, and no line drawn over a telegraph.
    - Package identity is set per D24 in `project.godot`; `export_presets.cfg` matches D24/D40 (arm64-v8a only, sensor-landscape) and no keystore is committed.
-8. Run the gate:
+11. Run the gate:
    ```bash
    godot --headless --path . -s res://tests/test_core_systems.gd
    ```
-9. **Stop condition:** exit code `0` with real output shown, commit as `phase-5: main hub, stage briefing & visual polish, gate 5 green`. On failure: commit as `phase-5: ..., gate 5 red — <failing assertion>`, report exact output, log ambiguities in `QUESTIONS.md`, stop.
+12. **Stop condition:** exit code `0` with real output shown, commit as `phase-5: main hub, stage briefing & visual polish, gate 5 green`. On failure: commit as `phase-5: ..., gate 5 red — <failing assertion>`, report exact output, log ambiguities in `QUESTIONS.md`, stop.
 
 Scope guard: on-device verification belongs to Phase 6; create the export presets (D40) but do not export to or test on a device in this phase. No new dependencies, no custom modeled art.

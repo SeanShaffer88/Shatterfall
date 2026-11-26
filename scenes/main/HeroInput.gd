@@ -15,6 +15,7 @@ const ACTIONS := {
 
 var hero: HeroController
 var stick: VirtualStick
+var camera: CameraRig          # optional: turns screen-space input into world space
 
 
 ## Registers the input actions at runtime so project.godot stays hand-editable.
@@ -33,9 +34,10 @@ func _ready() -> void:
 	ensure_actions()
 
 
-func bind(target_hero: HeroController, target_stick: VirtualStick) -> void:
+func bind(target_hero: HeroController, target_stick: VirtualStick, rig: CameraRig = null) -> void:
 	hero = target_hero
 	stick = target_stick
+	camera = rig
 
 
 func current_vector() -> Vector2:
@@ -44,9 +46,15 @@ func current_vector() -> Vector2:
 	return Input.get_vector("move_left", "move_right", "move_up", "move_down")
 
 
+## The §2A input vector: screen-space input turned by the camera yaw (Q-11).
+func world_vector() -> Vector2:
+	var v := current_vector()
+	return camera.screen_to_world(v) if camera != null else v
+
+
 func _physics_process(_delta: float) -> void:
 	if hero != null:
-		hero.input_vector = current_vector()
+		hero.input_vector = world_vector()
 
 
 func _unhandled_input(event: InputEvent) -> void:

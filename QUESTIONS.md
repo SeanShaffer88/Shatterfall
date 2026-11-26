@@ -8,6 +8,16 @@ The agent appends questions here instead of inventing systems (`AGENTS.md`). The
 
 ## Answered
 
+### Q-12 — Making Shatterfall distinct from Hunt Royale-likes — design — 2026-11-25
+Context: the designer noted the game plays a lot like Hunt Royale and shared their favorite games (Battleheart, Dark Cloud, World of Warcraft, Golden Sun, Bastion, Oxenfree, builder games among them).
+Answer: three pillars locked as D41–D43. Echoes become co-op partners from your past runs (Echo Conducting plus Vespera's Twin Reliquaries, Phase 4). The Hub becomes a cathedral restored with Glass between runs (§2I, Phase 5). The world gets a voice: Vespera's grudge barks, a sparse Reliquary narrator, rooms assembling from glass (§2J, AD13, Phase 5).
+Status: answered (2026-11-25), chosen by the designer
+
+### Q-11 — Camera angle: isometric 3/4 like the designer's reference — Phase 3 — 2026-11-25
+Context: the designer asked for a camera "more like" a Hunt Royale boss-hunt clip: the arena grid runs diagonally, the view is steeper and farther, with little perspective. D3's 40° / 11 m / FOV 45° view sat low behind the hero and let walls and doors block the view.
+Answer: D3 revised to yaw 45°, pitch 55°, boom 30 m, FOV 30°. Stick and keyboard input are rotated by −45° in `HeroInput` so "up" stays up on screen; §2A stays world-space. Landscape orientation (D1) is unchanged, even though the reference clip is portrait.
+Status: answered (2026-11-25), requested by the designer
+
 ### Q-8 — D3 "boom height 11 m" vs §2A "distance 11 m" — Phase 2 — 2026-11-25
 Context: the two camera specs disagreed on whether 11 m is the boom's height or its length.
 Answer: boom **length** 11 m at 40° pitch (height ≈ 7.07 m), matching §2A. D3 reworded.
