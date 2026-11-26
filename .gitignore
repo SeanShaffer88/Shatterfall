@@ -1,0 +1,9 @@
+# Godot
+.godot/
+/android/
+*.tmp
+
+# Signing material is never committed (D40)
+*.keystore
+*.jks
+export_credentials.cfg
