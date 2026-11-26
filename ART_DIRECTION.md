@@ -26,7 +26,7 @@ Tall, broad angular headdress carried low and wide for the single most readable 
 The canonical palette is obsidian/charcoal (`#121318`, `#2A2C33` stone) pierced by light: crimson `#D92638`, amber `#E8912D` (tunable), violet `#8F4FD4` (tunable), and by rule **AD6**, cold cyan for ghosts. Living heroes speak only warm light: Brute crimson, Rogue gold, Magi violet/amber.
 
 ### AD6 — Echoes are always cold cyan
-All Spectral Echo rendering uses cold cyan glass light (`#5FD4E6`, tunable), even when an echo inherits a warm-weapon effect. Players must be able to distinguish "ally now" from "ghost of my past run" with zero text. **Combat tie:** verify in Gate 4 that echo VFX overrides the inherited weapon's warm palette.
+All Spectral Echo rendering uses cold cyan glass light (`#5FD4E6`, tunable), even when an echo inherits a warm-weapon effect. Players must be able to distinguish "ally now" from "ghost of my past run" with zero text. The 0.5 s pre-cast ground cue (D35) is cyan too, so it can never be mistaken for an AD7 crimson-white telegraph. **Combat tie:** verify in Gate 4 that echo VFX overrides the inherited weapon's warm palette.
 
 ### AD7 — Telegraphs outrank ambience
 Every enemy telegraph (decal or glow) renders in a shared alarm language — crimson-white ramp — that takes render priority over all decorative lighting. Stained-glass shafts, candle pools, and hero glows never share the telegraph's exact hue-and-value. Readability of dodge cues outranks beauty in every conflict.
@@ -34,10 +34,10 @@ Every enemy telegraph (decal or glow) renders in a shared alarm language — cri
 ## 3. Signature Screens (AD8–AD10)
 
 ### AD8 — The Forge is a reliquary book
-The Weapon Forge drawer renders as an **open illuminated tome**: each two-page spread is one weapon class; evolution nodes are rune illustrations that ignite as level/shard/essence requirements complete; a glowing red reliquary orb appears at Tier 3 evolution entries as the payoff mark. This is UI framing, not unique 3D art — buildable in Godot UI with shaders/textures.
+The Weapon Forge drawer renders as an **open illuminated tome**: each two-page spread is one weapon class; evolution nodes are rune illustrations that ignite as level/shard/essence requirements complete; a glowing red reliquary orb appears at Stage 3 evolution entries as the payoff mark. This is UI framing, not unique 3D art — buildable in Godot UI with shaders/textures.
 
 ### AD9 — The Hub dais is the centerpiece (and a status readout)
-`MainHub.tscn` centers on the committed hero's weapon displayed plunged into a **stained-glass dais** ringed by candles. **Combat tie:** the blade's glow color and intensity encode weapon tier and evolution stage (base = dim smoky glow; Tier 2 = brighter colored light; Tier 3 = full radiant bloom) — an idle status readout that costs no extra UI.
+`MainHub.tscn` centers on the committed hero's weapon displayed plunged into a **stained-glass dais** ringed by candles. **Combat tie:** the blade's glow color and intensity encode evolution stage (D26: Base = dim smoky glow; Stage 2 = brighter colored light; Stage 3 = full radiant bloom), with rarity as a secondary rim tint — an idle status readout that costs no extra UI.
 
 ### AD10 — Evolution is a liturgical moment
 On Build-Up evolution: rise from dais → screen washes to stained-glass light → evolved weapon returns with its new mesh/glow preset. One shared moment for all four weapon classes, parameterized per class. Slated for Phase 5; the state hook (`weapon_id` mutation) already exists in Phase 1.
@@ -48,7 +48,7 @@ On Build-Up evolution: rise from dais → screen washes to stained-glass light �
 All hero/forge "glow" states are **emissive materials and lights**, not extra geometry or particles. A gray-box hero must support the AD2/AD3/AD4 emissive hooks before any Phase 5 polish begins — bake them into `HeroActor.tscn` in Phase 2.
 
 ### AD12 — Mobile perf budget is part of art direction
-Per-frame art cost targets on Galaxy S24 Ultra (D8): each hero ≤ 1 custom emissive light contribution; echo count ≤ 2 actors visible simultaneously (fits the 12-event cap and room pacing); zero real-time shadows from dynamic characters outside the hub dais scene. If a visual idea requires violating D8's 60 fps, the idea loses — a cheaper approximation wins.
+Per-frame art cost targets on Galaxy S24 Ultra (D8): each hero ≤ 1 custom emissive light contribution; echo count ≤ 2 actors visible simultaneously (enforced by the D35 wait-or-drop queue); zero real-time shadows from dynamic characters outside the hub dais scene. If a visual idea requires violating D8's 60 fps, the idea loses — a cheaper approximation wins.
 
 ---
 
@@ -62,4 +62,4 @@ Per-frame art cost targets on Galaxy S24 Ultra (D8): each hero ≤ 1 custom emis
 | Rogue swap-trim flash | 0.15 s | yes |
 | Crimson Guard ember ramp | linear 10%→30% | yes |
 
-**Gate hooks added by this document:** Gate 2 — Rogue swap flash fires on weapon-class change (AD3). Gate 3 — Brute emissive tracks Crimson Guard value (AD2); Magi orb brightness tracks barrier status (AD4). Gate 4 — echo VFX forces cold cyan over inherited warm weapon palettes (AD6). Gate 5 — hub dais weapon glow encodes tier/evolution stage (AD9); Forge rune ignition state matches recipe progress (AD8).
+**Gate hooks added by this document:** Gate 2 — Rogue swap flash fires on weapon-class change (AD3). Gate 3 — Brute emissive tracks Crimson Guard value (AD2); Magi orb brightness tracks barrier status (AD4). Gate 4 — echo VFX forces cold cyan over inherited warm weapon palettes (AD6). Gate 5 — hub dais weapon glow encodes evolution stage (AD9); Forge rune ignition state matches recipe progress (AD8).
