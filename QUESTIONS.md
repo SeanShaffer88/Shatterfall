@@ -8,6 +8,28 @@ The agent appends questions here instead of inventing systems (`AGENTS.md`). The
 
 ## Answered
 
+### Q-8 — D3 "boom height 11 m" vs §2A "distance 11 m" — Phase 2 — 2026-11-25
+Context: the two camera specs disagreed on whether 11 m is the boom's height or its length.
+Answer: boom **length** 11 m at 40° pitch (height ≈ 7.07 m), matching §2A. D3 reworded.
+Status: answered (2026-11-25), decided under the designer's delegation
+
+### Q-9 — Kit details §2D left open — Phase 2 — 2026-11-25
+Context: §2D gives the skills' effects but not these values; Phase 2 needs them.
+Answer (all tunable):
+- Projectile speeds: arrows 30 m/s, Prism Bolts 16 m/s (homing, 9 rad/s turn); both fly 1.5 m past their reach.
+- Shadow Vault and Phase Blink are movement-only and spawn no attack Area3D; the other 7 skills each spawn one (Barrage spawns 5 arrows or one fan).
+- Shatter Mark targets the nearest enemy within 10.5 m; with no target it does not cast and keeps its cooldown. Every other skill always casts.
+- Escape direction with no stick and no enemy: straight backwards.
+- "Slight pull" (Vortex Cleave) = 1.5 m toward the Brute, never closer than 1 m; Shatter Nova knockback 3 m; Gravity Well pulls at 2 m/s and ticks once per second (4 ticks).
+- Dagger-mode Adaptive Barrage hits everything in a 120° fan within 3.0 m.
+- Hit resolution is geometric (center distance + arc), not physics overlap, so headless tests and play agree (D38). Hitboxes and projectiles are still real Area3D nodes with sphere shapes.
+Status: answered (2026-11-25), decided under the designer's delegation
+
+### Q-10 — Leftover momentum after a lock — Phase 2 — 2026-11-25
+Context: the §2A code ended a CASTING_SKILL/DASHING lock without clearing velocity, so a Leap Slam or Shadow Vault slid about 1.5 m past its target.
+Answer: one line in the §2A lock exit, `velocity = Vector3.ZERO`, now in both BLUEPRINT §2A and `HeroController.gd`.
+Status: answered (2026-11-25), decided under the designer's delegation
+
 ### Q-7 — Where WeaponForge.gd and the package id live — Phase 1 — 2026-11-25
 Context: §3.2's tree had no home for `WeaponForge.gd` (it isn't an autoload), and `project.godot` has no package-id setting.
 Answer: plain classes go in `res://systems/` (now in the §3.2 tree). `project.godot` sets the display name and version from Phase 1; the package id `com.seanshaffer88.shatterfall` is an export-preset field, set in Phase 5 with `export_presets.cfg` (D40).
