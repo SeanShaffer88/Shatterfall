@@ -58,7 +58,12 @@ func _draw() -> void:
 	var f := ring_fraction()
 	if f > 0.0:
 		draw_arc(c, r - 10.0, -PI / 2.0, -PI / 2.0 + TAU * f, 48, Color("#E8912D"), 8.0)
+	# One word per line, centered, so long names ("ADAPTIVE BARRAGE") stay inside the circle.
 	var font := get_theme_default_font()
 	var fs := 22
-	var w := font.get_string_size(label_text, HORIZONTAL_ALIGNMENT_CENTER, -1, fs).x
-	draw_string(font, c + Vector2(-w * 0.5, fs * 0.35), label_text, HORIZONTAL_ALIGNMENT_CENTER, -1, fs, Color.WHITE)
+	var lines := label_text.split(" ", false)
+	var line_h := fs * 1.15
+	var top := c.y - line_h * (lines.size() - 1) * 0.5 + fs * 0.35
+	for i in lines.size():
+		var w := font.get_string_size(lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+		draw_string(font, Vector2(c.x - w * 0.5, top + i * line_h), lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color.WHITE)

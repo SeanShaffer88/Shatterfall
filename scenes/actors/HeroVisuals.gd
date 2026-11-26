@@ -8,6 +8,7 @@ extends Node3D
 ## Emissive materials only — no extra lights, particles or shadows (AD11/AD12).
 
 const CHARCOAL := Color("#2A2C33")
+const GUNMETAL := Color("#545866")   # hero bodies sit a step above #2A2C33 stone (AD1 readability)
 const CRIMSON := Color("#D92638")
 const GOLD := Color("#D9A441")
 const VIOLET := Color("#8F4FD4")
@@ -36,7 +37,7 @@ func build(owner_hero: HeroController) -> void:
 	_orb = null
 	flash_count = 0
 	_flash_left = 0.0
-	var body := _mat(CHARCOAL)
+	var body := _mat(GUNMETAL)
 	match hero.hero_class:
 		HeroController.HeroClass.BRUTE:
 			accent_color = CRIMSON
