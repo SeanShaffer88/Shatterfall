@@ -43,6 +43,13 @@ var draft_offers: Array = []
 var run_drops: Array[Dictionary] = []
 var grudge_hero: String = ""               # last clearer when the run began (D11 bias)
 
+# Echoes (D34–D36, D41). A "wave" for echoes is a room wave, or a boss phase
+# (phase 1 = wave 0, phase 2 = wave 1). wave_elapsed accumulates tick delta (D36).
+var echo_player: EchoPlayer
+var echo_wave: int = -1
+var wave_live: bool = false
+var wave_elapsed: float = 0.0
+
 # Star tracking (D37). Echo hits never count (D9).
 var fight_time: float = 0.0
 var guard_time: float = 0.0
@@ -70,9 +77,16 @@ func _ready() -> void:
 	stage.add_child(hero)
 	hero.global_position = stage.hero_spawn()
 	hero.setup(id)
+	hero.rotation.y = PI                    # face into the stage (−Z), not the entrance wall
 	hero.died.connect(_on_hero_died)
 	hero.hit_dealt.connect(_on_hit_dealt)
 	hero.damaged.connect(_on_hero_damaged)
+	hero.skill_cast_at.connect(_on_skill_cast_at)
+	EchoDirector.begin_recording(STAGE_ID, id)
+	echo_player = EchoPlayer.new()
+	echo_player.name = "EchoPlayer"
+	add_child(echo_player)
+	echo_player.setup(self, EchoDirector.events_for(STAGE_ID, id))
 	for trap in stage.traps:
 		trap.hero = hero
 	camera_rig.follow(hero)
@@ -90,6 +104,9 @@ func _physics_process(delta: float) -> void:
 func tick(delta: float) -> void:
 	if paused or phase == Phase.ENDED:
 		return
+	if wave_live:
+		wave_elapsed += delta
+		echo_player.tick(delta, room, echo_wave, wave_elapsed)
 	match phase:
 		Phase.ROOM:
 			_tick_waves(delta)
@@ -103,6 +120,7 @@ func tick(delta: float) -> void:
 				_boss_intro = -1.0
 				phase = Phase.BOSS
 				boss.activate()
+				_begin_echo_wave(0)
 				boss_activated.emit()
 		Phase.BOSS:
 			fight_time += delta
@@ -156,6 +174,7 @@ func _tick_waves(delta: float) -> void:
 			_spawn_wave()
 		return
 	if alive_enemies().is_empty():
+		_end_echo_wave()
 		if wave + 1 < waves_in(room).size():
 			_queue_wave(wave + 1, false)
 		else:
@@ -206,6 +225,7 @@ func _spawn_wave() -> void:
 	for p in _spawn_plan:
 		spawn_enemy(p["type"], p["pos"], room)
 	_spawn_plan.clear()
+	_begin_echo_wave(wave)
 	wave_started.emit(room, wave)
 
 
@@ -279,6 +299,9 @@ func _start_boss() -> void:
 	boss.global_position = stage.boss_spawn()
 	boss.died.connect(func(_b: EnemyBase) -> void: _finish("VICTORY"))
 	boss.adds_requested.connect(_on_adds_requested)
+	boss.phase_changed.connect(func(_p: int) -> void:
+		_end_echo_wave()
+		_begin_echo_wave(1))
 	hud.show_boss(boss)
 
 
@@ -291,10 +314,49 @@ func _on_adds_requested(groups: Array) -> void:
 			k += 1
 
 
+# --- Echoes (D34–D36, D41) ---------------------------------------------------------------
+
+func _begin_echo_wave(w: int) -> void:
+	echo_wave = w
+	wave_live = true
+	wave_elapsed = 0.0
+
+
+func _end_echo_wave() -> void:
+	if wave_live:
+		wave_live = false
+		echo_player.on_wave_ended(room, echo_wave)
+
+
+## Records manual effect-skill casts while a wave is live (D34).
+func _on_skill_cast_at(skill_id: String, point: Vector3, mode: String) -> void:
+	if not wave_live or phase not in [Phase.ROOM, Phase.BOSS]:
+		return
+	var i := hero.skills.index_of(skill_id)
+	if i < 0 or not hero.skills.defs[i].get("recorded", false):
+		return
+	var anchor := stage.echo_anchor(room).global_position
+	EchoDirector.record(room, echo_wave, wave_elapsed,
+		Combat.flat(hero.global_position - anchor), Combat.flat(point - anchor), skill_id, mode)
+
+
+## Screen tap on open ground: conduct the nearest live Echo cue (D41).
+func conduct_at_screen(screen_pos: Vector2) -> bool:
+	var cam := camera_rig.camera
+	var origin := cam.project_ray_origin(screen_pos)
+	var dir := cam.project_ray_normal(screen_pos)
+	if absf(dir.y) < 1e-4:
+		return false
+	var t := -origin.y / dir.y
+	if t <= 0.0:
+		return false
+	return echo_player.conduct(origin + dir * t)
+
+
 # --- Stars (D37, D9) --------------------------------------------------------------------
 
-func _on_hit_dealt(_target: Node3D, hit: Dictionary) -> void:
-	if phase != Phase.BOSS or hit.get("is_echo", false):
+func _on_hit_dealt(target: Node3D, hit: Dictionary) -> void:
+	if phase != Phase.BOSS or hit.get("is_echo", false) or target is ReliquaryPillar:
 		return
 	var src: String = hit.get("source", "")
 	if src in DAGGER_SOURCES or (src == "ADAPTIVE_BARRAGE" and hit.get("mode", "") == "DAGGERS"):
@@ -357,6 +419,10 @@ func _finish(r: String) -> void:
 		"essence": "",
 		"adaptation": "",
 	}
+	if r == "VICTORY":
+		EchoDirector.commit_victory(hero.weapons.values()[0].weapon_id)
+	else:
+		EchoDirector.discard()
 	if r == "VICTORY":
 		var bd := GameState.loot_table(STAGE_ID).roll_boss_drop(GameState.rng_loot, hero.hero_id, grudge_hero)
 		run_drops.append(GameState.grant_drop(bd["weapon"]).to_dict())

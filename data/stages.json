@@ -59,6 +59,7 @@
 					"SHARD_RAIN": { "zones": 3, "radius": 1.8, "scatter": 4, "damage": 10 },
 					"SHARD_WALL": { "length": 6, "thickness": 0.6, "distance_from_boss": 3, "duration": 5, "rise_telegraph": 0.6 }
 				},
+				"twin_reliquaries": { "interval": 20, "spacing": 10, "window": 1.5, "time_limit": 6, "shield_damage_taken_mult": 0.25, "shield_duration": 8, "pillar_radius": 0.6 },
 				"essence_id": "VESPERA_ESSENCE"
 			},
 			"drops": {

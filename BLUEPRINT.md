@@ -247,7 +247,7 @@ Intent-anchored keyframes, not frame recording.
 **Playback (normative, D35):** while hero X plays, `EchoDirector` loads the saved entries of the **other two** heroes. For the active (room, wave), when `wave_elapsed >= t − 1.0` it resolves the target:
 1. the nearest living enemy within **3.5 m** of the recorded target point; else
 2. the nearest living enemy in the room within the skill's reach of the recorded position; else
-3. skip the event silently.
+3. none yet: keep looking every tick until `t`; skip the event silently only if there is still no target at `t`. The cue opens the moment a target is found (so it can be shorter than 1.0 s).
 
 It then shows a 1.0 s cyan ground cue at the resolved point, and at `t` spawns a `SpectralEcho` actor (translucent stained-glass Fresnel shader, **cold cyan only** — AD6) that casts the skill and dissolves into glass shards. At most 2 echo actors exist at once; a third event waits up to 1.5 s for a slot, then drops. If the wave ends before `t`, the event drops. Echoes fire in the boss room too. Players with no saved echoes from other heroes see "No echoes yet — clear this stage with another hero" in the Stage Briefing.
 
@@ -414,7 +414,7 @@ res://
 ├── autoload/
 │   ├── GameState.gd          # Active hero, stage progress, stars, grudge, seeded RNG streams (D25)
 │   ├── SaveManager.gd        # Atomic JSON read/write, schema_version (D15), single slot (D23)
-│   └── EchoDirector.gd       # Records skill keyframes & spawns SpectralEcho actors
+│   └── EchoDirector.gd       # Records skill keyframes, reads/writes per-stage echo files
 ├── data/
 │   ├── heroes.json           # Base stats, coeffs, skills, cadences, locks (§2D, D25, D27)
 │   ├── weapons.json          # Classes, hero-lock (D5), evolution lines (§2C), economy (D30/D31)
@@ -432,6 +432,7 @@ res://
 │   │   ├── MainHub.tscn      # Hero trio selector, Stage Briefing, Weapon Forge drawer
 │   │   ├── DungeonRun.tscn   # Landscape HUD, virtual stick, 3 skill buttons, Boon modal, pause
 │   │   ├── CameraRig.gd      # D3 follow camera
+│   │   ├── EchoPlayer.gd     # Per-run Echo playback, cues, conducting (D35, D41)
 │   │   └── HeroInput.gd      # Stick + WASD/arrows, J/K/L or 1/2/3 skills
 │   ├── ui/
 │   │   ├── RunHud.gd         # Stats, stick and skill-button layout
@@ -445,7 +446,8 @@ res://
 │   │   ├── Hitbox.gd         # Area3D attack areas and zones
 │   │   ├── Projectile.gd     # Area3D arrows / Prism Bolts
 │   │   ├── TrainingDummy.gd  # Gray-box target (enemy contract, no AI)
-│   │   ├── SpectralEcho.tscn # Translucent stained-glass ghost executor
+│   │   ├── SpectralEcho.tscn # Translucent stained-glass ghost executor (§2B table)
+│   │   ├── ReliquaryPillar.gd # Twin Reliquaries pillar (D41)
 │   │   ├── EnemyBase.tscn    # Crawler / Spitter / Bulwark AI + telegraph decals
 │   │   └── BossVespera.tscn  # 2-phase boss + Grudge Adaptation handler
 │   └── rooms/
@@ -501,3 +503,4 @@ On Windows use `Godot_v4.7.2-stable_win64.exe` for `godot`. All assertions (hero
 9. Echo Conducting (D41): is a 1.0 s cue long enough to tap with a thumb, and is 6 m the right reach?
 10. Twin Reliquaries (D41): can a first-time Brute solve it without an Echo? Tune spacing and window until it's possible but satisfying with one.
 11. Glass pacing (D42): ~20 runs to restore all six windows; check against D31 and how long players stay.
+12. Hero size on screen: at the 30 m iso boom (D3) the hero is about 4% of screen height in landscape; try 22–26 m if heroes read too small on the S24 Ultra.

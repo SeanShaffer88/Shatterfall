@@ -8,6 +8,11 @@ The agent appends questions here instead of inventing systems (`AGENTS.md`). The
 
 ## Answered
 
+### Q-13 — Echo target resolution timing and lifetime — Phase 4 — 2026-11-25
+Context: (1) resolving an Echo's target only once, at `t − 1.0`, skipped many Echoes because enemies were still walking in a second earlier. (2) An Echo freed itself after its 0.8 s fade while its Gravity Well (2.6 s) and Barrage arrows still ran callbacks on it (found by the windowed run, 220 errors). (3) Heroes spawned facing the entrance wall, so a target-less Leap Slam went backwards.
+Answer: (1) from `t − 1.0` an Echo keeps looking every tick and is skipped only if there is still no target at `t`; the cue opens when a target appears (§2B). (2) An Echo hides after its fade but stays alive, invisible and outside the AD12 two-actor cap, until everything it spawned is done. (3) Heroes spawn facing into the stage (−Z). All three have regression tests.
+Status: answered (2026-11-25), decided under the designer's delegation
+
 ### Q-12 — Making Shatterfall distinct from Hunt Royale-likes — design — 2026-11-25
 Context: the designer noted the game plays a lot like Hunt Royale and shared their favorite games (Battleheart, Dark Cloud, World of Warcraft, Golden Sun, Bastion, Oxenfree, builder games among them).
 Answer: three pillars locked as D41–D43. Echoes become co-op partners from your past runs (Echo Conducting plus Vespera's Twin Reliquaries, Phase 4). The Hub becomes a cathedral restored with Glass between runs (§2I, Phase 5). The world gets a voice: Vespera's grudge barks, a sparse Reliquary narrator, rooms assembling from glass (§2J, AD13, Phase 5).

@@ -18,6 +18,7 @@ var run: Node3D
 var errors: Array[String] = []
 var _shots_taken := {}
 var _start_ms := 0
+var _echo_casts := 0
 
 
 class Catcher extends Logger:
@@ -61,6 +62,7 @@ func _start() -> void:
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	var gs := root.get_node("GameState")
 	root.get_node("SaveManager").save_path = out_dir + "/bot_save.json"
+	root.get_node("EchoDirector").echo_dir = out_dir + "/echoes"
 	gs.reset_profile()
 	gs.begin_run(hero_id, seed_value)
 	run = (load(RUN_SCENE_PATH) as PackedScene).instantiate()
@@ -75,6 +77,12 @@ func _start() -> void:
 	run.boon_taken.connect(func(id: String) -> void: _log("took boon %s" % id))
 	run.boss_activated.connect(func() -> void: _log("Vespera active (adaptation: '%s')" % run.boss.adaptation_id()))
 	run.run_ended.connect(_on_end)
+	_log("echoes loaded: %d" % run.echo_player.events.size())
+	run.echo_player.echo_cast.connect(func(e: Dictionary, _a) -> void:
+		_echo_casts += 1
+		_log("  ECHO %s %s (room %d wave %d t=%.1f%s)" % [e["hero"], e["skill"], e["room"] + 1, e["wave"] + 1, e["t"], ", conducted" if e["conducted"] else ""])
+		_maybe_shot("6_echo_cast", true))
+	run.echo_player.event_dropped.connect(func(e: Dictionary, why: String) -> void: _log("  echo dropped: %s %s (%s)" % [e["hero"], e["skill"], why]))
 	physics_frame.connect(_drive)
 
 
@@ -160,6 +168,7 @@ func _shot(label: String) -> void:
 
 
 func _on_end(summary: Dictionary) -> void:
+	_log("echo casts this run: %d" % _echo_casts)
 	_log("RUN %s — hero HP %d/%d, drops %d, star %s (%s / %s), boons lost %s" % [
 		summary["result"], run.hero.hp, run.hero.max_hp, summary["drops"].size(),
 		"earned" if summary["star_earned"] else "not earned",

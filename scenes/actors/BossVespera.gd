@@ -10,6 +10,8 @@ signal phase_changed(phase_index: int)
 signal adds_requested(groups: Array)          # the run controller spawns them
 signal wall_raised(wall: ShardWall)
 signal blinked(from: Vector3, to: Vector3)
+signal reliquaries_raised(pillars: Array)
+signal reliquaries_resolved(success: bool)
 
 const MELEE_SOURCES := ["CLEAVE", "LEAP_SLAM", "VORTEX_CLEAVE", "DAGGER_FLURRY"]
 
@@ -24,6 +26,14 @@ var _attack_cd: float = 0.0
 var _veil_t: float = 0.0
 var _wall_t: float = 0.0
 var _adds_spawned: bool = false
+
+# Twin Reliquaries (D41): phase-2 two-body mechanic and its Shatter Shield.
+var shield_left: float = 0.0
+var pillars: Array[ReliquaryPillar] = []
+var _pillar_t: float = 0.0
+var _pair_age: float = 0.0
+var _break_times: Array[float] = []
+var _clock: float = 0.0
 
 
 func setup_boss(cfg_boss: Dictionary, adapt: Dictionary, target_hero: HeroController, arena: Rect2, random: RandomNumberGenerator) -> void:
@@ -97,7 +107,10 @@ func take_hit(hit: Dictionary) -> void:
 	if adaptation_id() == "RUNIC_DAMPENING" and not _dampening_allows(hit):
 		return
 	var before := hp
-	hp = maxi(0, hp - int(hit.get("damage", 0)))
+	var dmg := int(hit.get("damage", 0))
+	if shield_left > 0.0:
+		dmg = maxi(1, roundi(dmg * float(_twin()["shield_damage_taken_mult"])))
+	hp = maxi(0, hp - dmg)
 	hits_taken += 1
 	if adaptation_id() == "SPIKED_CARAPACE" and not hit.get("is_echo", false) and _is_melee(hit) and is_instance_valid(hero):
 		var recoil := roundi((before - hp) * float(adaptation["params"]["recoil_fraction"]))
@@ -106,6 +119,7 @@ func take_hit(hit: Dictionary) -> void:
 		_enter_phase_two()
 	if hp == 0:
 		_cancel_attack()
+		_clear_pillars()
 		_die()
 
 
@@ -159,11 +173,14 @@ func tick(delta: float) -> void:
 		if _veil_t >= float(adaptation["params"]["interval"]):
 			_veil_t = 0.0
 			_blink()
+	_clock += delta
+	shield_left = maxf(0.0, shield_left - delta)
 	if phase_index == 1:
 		_wall_t += delta
 		if _wall_t >= float(phase_cfg()["shard_wall_interval"]):
 			_wall_t = 0.0
 			_raise_wall()
+		_tick_reliquaries(delta)
 	if not current_attack.is_empty():
 		current_attack["t"] -= delta
 		for tg in current_attack["telegraphs"]:
@@ -273,6 +290,7 @@ func _blink() -> void:
 func _enter_phase_two() -> void:
 	phase_index = 1
 	_wall_t = 0.0
+	_pillar_t = 0.0
 	phase_changed.emit(1)
 	if not _adds_spawned:
 		_adds_spawned = true
@@ -288,6 +306,71 @@ func _raise_wall() -> void:
 	wall.global_position = Combat.flat(global_position) + dir * float(a["distance_from_boss"])
 	wall.rotation.y = atan2(dir.x, dir.z)
 	wall_raised.emit(wall)
+
+
+# --- Twin Reliquaries (D41) ----------------------------------------------------------
+
+func _twin() -> Dictionary:
+	return boss_cfg["twin_reliquaries"]
+
+
+func is_shielded() -> bool:
+	return shield_left > 0.0
+
+
+func _tick_reliquaries(delta: float) -> void:
+	var cfg_t := _twin()
+	if pillars.is_empty():
+		_pillar_t += delta
+		if _pillar_t >= float(cfg_t["interval"]):
+			_pillar_t = 0.0
+			raise_reliquaries()
+		return
+	_pair_age += delta
+	if _pair_age >= float(cfg_t["time_limit"]):
+		_resolve_reliquaries(false)
+
+
+## Two pillars on opposite sides of the arena center, `spacing` apart.
+func raise_reliquaries() -> void:
+	_clear_pillars()
+	var cfg_t := _twin()
+	var center := Vector3(bounds.get_center().x, 0.0, bounds.get_center().y)
+	var half := float(cfg_t["spacing"]) * 0.5
+	for side in [-1.0, 1.0]:
+		var p := ReliquaryPillar.new()
+		p.setup(float(cfg_t["time_limit"]), float(cfg_t["pillar_radius"]))
+		get_parent().add_child(p)
+		p.global_position = center + Vector3(side * half, 0.0, 0.0)
+		p.broken.connect(_on_pillar_broken)
+		pillars.append(p)
+	_pair_age = 0.0
+	_break_times.clear()
+	reliquaries_raised.emit(pillars)
+
+
+func _on_pillar_broken(_p: ReliquaryPillar) -> void:
+	_break_times.append(_clock)
+	if _break_times.size() >= 2:
+		_resolve_reliquaries(absf(_break_times[1] - _break_times[0]) <= float(_twin()["window"]) + 1e-6)
+
+
+## Both broken within the window: they shatter harmlessly. Otherwise Vespera
+## gains (or refreshes) Shatter Shield. Never fatal.
+func _resolve_reliquaries(success: bool) -> void:
+	if not success:
+		shield_left = float(_twin()["shield_duration"])
+	_clear_pillars()
+	reliquaries_resolved.emit(success)
+
+
+func _clear_pillars() -> void:
+	for p in pillars:
+		if is_instance_valid(p):
+			p.queue_free()
+	pillars.clear()
+	_break_times.clear()
+	_pair_age = 0.0
 
 
 func _clamp_point(p: Vector3) -> Vector3:

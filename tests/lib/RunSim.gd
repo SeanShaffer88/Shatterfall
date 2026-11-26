@@ -7,6 +7,7 @@ extends RefCounted
 const DT := 1.0 / 60.0
 const STAGE := "stage_01_sunken_nave"
 const SAVE := "user://test_tmp/run_save.json"
+const ECHOES := "user://test_tmp/echoes"
 const RUN_SCENE := preload("res://scenes/main/DungeonRun.tscn")
 
 var tree: SceneTree
@@ -18,6 +19,7 @@ var time: float = 0.0
 func _init(scene_tree: SceneTree, hero_id: String, seed_value: int = 7, last_clearer: String = "") -> void:
 	tree = scene_tree
 	SaveManager.save_path = SAVE
+	EchoDirector.echo_dir = ECHOES
 	GameState.reset_profile()
 	if last_clearer != "":
 		GameState.last_clearing_hero[STAGE] = last_clearer
@@ -29,15 +31,29 @@ func _init(scene_tree: SceneTree, hero_id: String, seed_value: int = 7, last_cle
 
 func step(n: int = 1) -> void:
 	for i in n:
-		if not run.paused:
-			hero._physics_process(DT)
-			hero.skills.tick(DT)
-			hero.visuals.tick(DT)
-			for node in tree.get_nodes_in_group(Combat.TICK_GROUP):
-				if run.is_ancestor_of(node) and not node.is_queued_for_deletion():
-					node.tick(DT)
-		run.tick(DT)
-		time += DT
+		step_delta(DT)
+
+
+## One step of `d` seconds of game time (D36: hit-stop dips arrive as smaller deltas).
+func step_delta(d: float) -> void:
+	if not run.paused:
+		hero._physics_process(d)
+		hero.skills.tick(d)
+		hero.visuals.tick(d)
+		for node in tree.get_nodes_in_group(Combat.TICK_GROUP):
+			if run.is_ancestor_of(node) and not node.is_queued_for_deletion():
+				node.tick(d)
+	run.tick(d)
+	time += d
+
+
+func cast(skill: String) -> bool:
+	return hero.skills.request(hero.skills.index_of(skill))
+
+
+func stun_all(seconds: float = 60.0) -> void:
+	for e in run.alive_enemies():
+		e.apply_status("STUN", {"duration": seconds})
 
 
 func seconds(s: float) -> void:
@@ -101,13 +117,19 @@ func saved() -> Dictionary:
 	return SaveManager.read_json(SAVE)["data"]
 
 
-func dispose() -> void:
+## `clean_echoes = false` keeps this run's echo file for a following replay sim.
+func dispose(clean_echoes: bool = true) -> void:
 	if is_instance_valid(run):
 		run.free()
 	tree.paused = false
 	GameState.active_hero = ""
 	GameState.reset_profile()
 	SaveManager.save_path = SaveManager.DEFAULT_SAVE_PATH
+	EchoDirector.echo_dir = EchoDirector.DEFAULT_DIR
+	EchoDirector.discard()
+	if clean_echoes and DirAccess.dir_exists_absolute(ECHOES):
+		for f in DirAccess.get_files_at(ECHOES):
+			DirAccess.remove_absolute(ECHOES + "/" + f)
 	if DirAccess.dir_exists_absolute("user://test_tmp"):
 		for f in DirAccess.get_files_at("user://test_tmp"):
 			DirAccess.remove_absolute("user://test_tmp/" + f)

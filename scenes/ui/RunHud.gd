@@ -66,6 +66,27 @@ func _process(_delta: float) -> void:
 		boss_label.text = "VESPERA%s" % ("" if _boss.adaptation_id() == "" else "  ·  " + str(_boss.adaptation.get("name", "")))
 
 
+## A touch on open ground (not a HUD control or overlay) conducts an Echo cue (D41).
+func _input(event: InputEvent) -> void:
+	if run == null or not (event is InputEventScreenTouch) or not event.pressed:
+		return
+	if is_over_control(event.position) or not run.echo_player.has_live_cue():
+		return
+	if run.conduct_at_screen(event.position):
+		get_viewport().set_input_as_handled()
+
+
+func is_over_control(pos: Vector2) -> bool:
+	if draft_panel.visible or pause_panel.visible or summary_panel.visible:
+		return true
+	var controls: Array[Control] = [stick, pause_button]
+	controls.append_array(buttons)
+	for c in controls:
+		if c.visible and c.get_global_rect().has_point(pos):
+			return true
+	return false
+
+
 func wave_text() -> String:
 	match run.phase:
 		DungeonRun.Phase.BOSS_INTRO, DungeonRun.Phase.BOSS:
