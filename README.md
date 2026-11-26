@@ -4,7 +4,7 @@ Solo-Hero Action Dungeon Crawler / Weapon-Evolution RPG. Godot 4.7.2 stable (pin
 
 ## Documents
 
-- [BLUEPRINT.md](BLUEPRINT.md) — normative design + build spec. §0 Decision Log (D1–D40) is locked.
+- [BLUEPRINT.md](BLUEPRINT.md) — normative design + build spec. §0 Decision Log (D1–D43) is locked.
 - [ART_DIRECTION.md](ART_DIRECTION.md) — locked visual language addendum (AD1–AD12) with per-hero emissive rules and gate hooks.
 - [AGENTS.md](AGENTS.md) — session rules for the coding agent (phase discipline, test integrity, scope locks).
 - [QUESTIONS.md](QUESTIONS.md) — ambiguity log; the agent files questions here instead of inventing systems.
