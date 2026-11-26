@@ -8,18 +8,18 @@ Already verified on the dev machine (2026-11-26): Godot 4.7.2 export templates, 
 
 1. Enable USB debugging on the **Galaxy S24 Ultra** (D8) and connect it. Check it's listed:
    ```powershell
-   & "$env:LOCALAPPDATA\Android\Sdk\platform-toolsdb.exe" devices
+   & "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" devices
    ```
 2. Build the debug APK from the repo root:
    ```powershell
-   & "$env:LOCALAPPDATA\Programs\Godot.7.2-stable\Godot_v4.7.2-stable_win64.exe" --headless --path . --export-debug "Android" build/android/Shatterfall.apk
+   & "$env:LOCALAPPDATA\Programs\Godot\4.7.2-stable\Godot_v4.7.2-stable_win64.exe" --headless --path . --export-debug "Android" build/android/Shatterfall.apk
    ```
 3. Install it and start a log capture:
    ```powershell
-   & "$env:LOCALAPPDATA\Android\Sdk\platform-toolsdb.exe" install -r build/android/Shatterfall.apk
+   & "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" install -r build/android/Shatterfall.apk
    ```
    ```powershell
-   & "$env:LOCALAPPDATA\Android\Sdk\platform-toolsdb.exe" logcat -s godot:V > phase6_logcat.txt
+   & "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" logcat -s godot:V > phase6_logcat.txt
    ```
 4. Run the checklist below untethered for feel tests and connected for log capture. The game opens in the Hub.
 
