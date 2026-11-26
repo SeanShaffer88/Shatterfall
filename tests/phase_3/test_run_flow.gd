@@ -37,7 +37,11 @@ func _expected(groups: Array) -> Dictionary:
 func test_first_wave_spawns_after_its_telegraph(t: TestContext) -> void:
 	var s := _new("BRUTE")
 	t.eq(s.run.phase, DungeonRun.Phase.ROOM, "run starts in Room 1")
-	s.step()
+	t.ok(s.run.stage.is_assembling(0), "Room 1 assembles from glass first (AD13)")
+	s.seconds(StageLayout.ASSEMBLY_TIME - 0.05)
+	t.eq(_tree().get_nodes_in_group(Telegraph.GROUP).filter(func(n: Node) -> bool: return s.run.is_ancestor_of(n)).size(), 0, "no spawn telegraph while assembling")
+	s.seconds(0.07)
+	t.ok(not s.run.stage.is_assembling(0), "assembly finished before the first wave telegraph (AD13 gate)")
 	var markers := _tree().get_nodes_in_group(Telegraph.GROUP).filter(func(n: Node) -> bool: return s.run.is_ancestor_of(n))
 	t.eq(markers.size(), 4, "4 spawn telegraphs for 3 Crawlers + 1 Spitter")
 	s.seconds(0.9)
@@ -52,7 +56,7 @@ func test_first_wave_spawns_after_its_telegraph(t: TestContext) -> void:
 func test_doors_unlock_only_on_last_wave_clear(t: TestContext) -> void:
 	var s := _new("ROGUE")
 	var doors := s.run.stage.doors
-	s.seconds(1.1)
+	s.seconds(StageLayout.ASSEMBLY_TIME + 1.1)
 	t.ok(not doors[0].is_open, "door closed while Room 1 is live")
 	s.kill_all()
 	s.step()
@@ -61,7 +65,7 @@ func test_doors_unlock_only_on_last_wave_clear(t: TestContext) -> void:
 	s.enter_next_room()
 	t.eq(s.run.room, 1, "entered Room 2")
 	t.ok(not doors[0].is_open, "door locks behind the hero")
-	s.seconds(1.1)
+	s.seconds(StageLayout.ASSEMBLY_TIME + 1.1)
 	t.eq(_counts(s.run.alive_enemies()), {"CRAWLER": 4}, "Room 2 wave 1")
 	s.kill_all()
 	s.step()
@@ -228,7 +232,7 @@ func test_app_background_auto_pauses(t: TestContext) -> void:
 	s.seconds(2.0)
 	t.eq(s.run.alive_enemies().size(), 0, "waves do not advance while paused")
 	s.run.set_paused(false)
-	s.seconds(1.1)
+	s.seconds(StageLayout.ASSEMBLY_TIME + 1.1)
 	t.eq(s.run.alive_enemies().size(), 4, "resumes where it left off")
 
 

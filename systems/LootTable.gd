@@ -6,6 +6,8 @@ extends RefCounted
 var _drops: Dictionary     # stages.json -> stage.drops
 var _weapons: Dictionary   # weapons.json
 var _essence_id: String
+## Ledger Window (D42); < 0 uses stages.json.
+var room_drop_chance_override: float = -1.0
 
 
 func _init(stage_cfg: Dictionary, weapons_cfg: Dictionary) -> void:
@@ -41,9 +43,13 @@ func class_weights(run_hero: String, grudge_hero: String) -> Dictionary:
 	return w
 
 
+func room_drop_chance() -> float:
+	return room_drop_chance_override if room_drop_chance_override >= 0.0 else float(_drops["room_drop_chance"])
+
+
 ## {} for no drop, else { weapon_class, rarity, level }.
 func roll_room_drop(rng: RandomNumberGenerator, run_hero: String, grudge_hero: String) -> Dictionary:
-	if rng.randf() >= float(_drops["room_drop_chance"]):
+	if rng.randf() >= room_drop_chance():
 		return {}
 	return _roll_weapon(rng, run_hero, grudge_hero, int(_drops["room_drop_level"]))
 

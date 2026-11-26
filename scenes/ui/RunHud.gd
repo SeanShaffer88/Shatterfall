@@ -25,6 +25,8 @@ var draft_buttons: Array[Button] = []
 var pause_panel: PanelContainer
 var summary_panel: PanelContainer
 var summary_label: Label
+var bark_label: Label
+var _bark_left: float = 0.0
 
 var _boss: BossVespera
 
@@ -36,6 +38,7 @@ func _ready() -> void:
 	_build_draft()
 	_build_pause()
 	_build_summary()
+	_build_bark()
 
 
 func bind(target_hero: HeroController) -> void:
@@ -46,9 +49,15 @@ func bind(target_hero: HeroController) -> void:
 
 func bind_run(target_run: DungeonRun) -> void:
 	run = target_run
+	BarkDirector.blocked_check = telegraph_under_bark
+	if not BarkDirector.line_shown.is_connected(show_bark):
+		BarkDirector.line_shown.connect(show_bark)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	if _bark_left > 0.0:
+		_bark_left -= delta
+		bark_label.visible = _bark_left > 0.0
 	if hero == null:
 		return
 	var line := "%s   HP %d / %d" % [hero.hero_id, hero.hp, hero.max_hp]
@@ -85,6 +94,32 @@ func is_over_control(pos: Vector2) -> bool:
 		if c.visible and c.get_global_rect().has_point(pos):
 			return true
 	return false
+
+
+func show_bark(speaker: String, text: String) -> void:
+	if summary_panel.visible or pause_panel.visible or draft_panel.visible:
+		return                               # never over an overlay
+	bark_label.text = ("Vespera: " if speaker == "VESPERA" else "") + text
+	bark_label.modulate = Color("#C9A2F0") if speaker == "VESPERA" else Color("#F2E6D0")
+	bark_label.visible = true
+	_bark_left = float(GameState.barks_data["rules"]["duration"])
+
+
+## True while any telegraph projects into the bark area (D43: never cover one).
+func telegraph_under_bark() -> bool:
+	if run == null or not is_instance_valid(run.camera_rig) or run.camera_rig.camera == null:
+		return false
+	var area := bark_label.get_global_rect().grow(40.0)
+	for tg in get_tree().get_nodes_in_group(Telegraph.GROUP):
+		if run.is_ancestor_of(tg) and area.has_point(run.camera_rig.camera.unproject_position(tg.global_position)):
+			return true
+	return false
+
+
+func _exit_tree() -> void:
+	if BarkDirector.line_shown.is_connected(show_bark):
+		BarkDirector.line_shown.disconnect(show_bark)
+	BarkDirector.blocked_check = Callable()
 
 
 func wave_text() -> String:
@@ -129,6 +164,8 @@ func show_boss(boss: BossVespera) -> void:
 
 
 func show_summary(s: Dictionary) -> void:
+	bark_label.visible = false
+	_bark_left = 0.0
 	draft_panel.visible = false
 	pause_panel.visible = false
 	boss_bar.visible = false
@@ -148,14 +185,30 @@ static func summary_text(s: Dictionary) -> String:
 	else:
 		lines.append("Stars are only earned on a clear.")
 	if not s["star_earned"]:
-		lines.append("  progress: %s / %s" % [_fmt(st["value"], st["metric"]), _fmt(st["threshold"], st["metric"])])
+		lines.append("  " + star_progress_text(st))
 	lines.append("Drops kept: %d weapon(s)%s" % [s["drops"].size(), "  +  Vespera essence" if s["essence"] != "" else ""])
 	lines.append("Forge progress kept.")
+	if int(s.get("glass", 0)) > 0:
+		lines.append("Glass gathered: %d" % int(s["glass"]))
 	if not s["boons_lost"].is_empty():
 		lines.append("Boons lost: %s" % ", ".join(PackedStringArray(s["boons_lost"])).replace("_", " ").capitalize())
 	if s["adaptation"] != "":
 		lines.append("Vespera adapts: %s" % s["adaptation"])
 	return "\n".join(lines)
+
+
+## Plain-English progress toward the hero's star (D37).
+static func star_progress_text(st: Dictionary) -> String:
+	match str(st["metric"]):
+		"guard_uptime_fraction":
+			return "Crimson Guard was up %s of the fight (needs %s)" % [_fmt(st["value"], st["metric"]), _fmt(st["threshold"], st["metric"])]
+		"dagger_hits":
+			return "%d dagger hits on Vespera (needs %d)" % [int(st["value"]), int(st["threshold"])]
+		"hp_lost":
+			if not st.get("reached", true):
+				return "Room 2 was not cleared this run"
+			return "Lost %d HP in Room 2 (needs 0)" % int(st["value"])
+	return ""
 
 
 static func _fmt(v, metric: String) -> String:
@@ -307,6 +360,24 @@ func _build_pause() -> void:
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(note)
+
+
+func _build_bark() -> void:
+	bark_label = Label.new()
+	bark_label.name = "Bark"
+	bark_label.add_theme_font_size_override("font_size", 34)
+	bark_label.add_theme_constant_override("outline_size", 10)
+	bark_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	bark_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	bark_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	bark_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	bark_label.offset_left = -560.0
+	bark_label.offset_right = 560.0
+	bark_label.offset_top = -SAFE_MARGIN - 300.0
+	bark_label.offset_bottom = -SAFE_MARGIN - 220.0
+	bark_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bark_label.visible = false
+	add_child(bark_label)
 
 
 func _build_summary() -> void:

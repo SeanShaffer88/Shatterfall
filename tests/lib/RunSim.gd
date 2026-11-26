@@ -16,14 +16,17 @@ var hero: HeroController
 var time: float = 0.0
 
 
-func _init(scene_tree: SceneTree, hero_id: String, seed_value: int = 7, last_clearer: String = "") -> void:
+## `fresh = false` keeps the current profile (Hub → run → Hub flow tests).
+func _init(scene_tree: SceneTree, hero_id: String, seed_value: int = 7, last_clearer: String = "", fresh: bool = true) -> void:
 	tree = scene_tree
 	SaveManager.save_path = SAVE
 	EchoDirector.echo_dir = ECHOES
-	GameState.reset_profile()
+	if fresh:
+		GameState.reset_profile()
 	if last_clearer != "":
 		GameState.last_clearing_hero[STAGE] = last_clearer
-	GameState.begin_run(hero_id, seed_value)
+	if fresh or GameState.active_hero != hero_id:
+		GameState.begin_run(hero_id, seed_value)
 	run = RUN_SCENE.instantiate()
 	tree.root.add_child(run)
 	hero = run.hero

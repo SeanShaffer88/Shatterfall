@@ -19,9 +19,16 @@ var doors: Array[Door] = []
 var traps: Array[SpikeTrap] = []
 var rooms: Array[Node3D] = []
 var _stone: StandardMaterial3D
+var _room_meshes: Dictionary = {}       # room -> [MeshInstance3D] (AD13)
+var _assembly: Dictionary = {}          # room -> seconds elapsed while assembling
+var _building_room: int = -1
+
+const ASSEMBLY_TIME := 0.6              # AD13
+const ASSEMBLY_DROP := 6.0              # m the glass falls from
 
 
 func _ready() -> void:
+	add_to_group(Combat.TICK_GROUP)
 	if rooms.is_empty():
 		build()
 
@@ -98,7 +105,10 @@ func build() -> void:
 		var anchor := Marker3D.new()
 		anchor.name = "EchoAnchor"
 		node.add_child(anchor)
+		_building_room = i
+		_room_meshes[i] = []
 		_build_room(i)
+		_building_room = -1
 		if i < ROOM_COUNT:
 			_build_corridor(i)
 
@@ -168,6 +178,35 @@ func build_traps(stage_cfg: Dictionary, room_index: int) -> void:
 		traps.append(trap)
 
 
+## AD13: the room's floor and walls fall into place from above over 0.6 s.
+## Visual only: collision is already in place.
+func assemble(i: int) -> void:
+	_assembly[i] = 0.0
+	for m in _room_meshes.get(i, []):
+		m.position.y = ASSEMBLY_DROP
+		m.transparency = 0.6
+
+
+func is_assembling(i: int) -> bool:
+	return _assembly.has(i)
+
+
+func tick(delta: float) -> void:
+	for i in _assembly.keys():
+		_assembly[i] += delta
+		var k := clampf(_assembly[i] / ASSEMBLY_TIME, 0.0, 1.0)
+		var eased := 1.0 - pow(1.0 - k, 3.0)
+		for m in _room_meshes.get(i, []):
+			m.position.y = ASSEMBLY_DROP * (1.0 - eased)
+			m.transparency = 0.6 * (1.0 - eased)
+		if k >= 1.0:
+			_assembly.erase(i)
+
+
+func _physics_process(delta: float) -> void:
+	tick(delta)
+
+
 func _solid(size: Vector3, at: Vector3, label: String) -> StaticBody3D:
 	var body := StaticBody3D.new()
 	body.name = label
@@ -185,6 +224,8 @@ func _solid(size: Vector3, at: Vector3, label: String) -> StaticBody3D:
 	mesh.material_override = _stone
 	mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	body.add_child(mesh)
+	if _building_room >= 0:
+		_room_meshes[_building_room].append(mesh)
 	add_child(body)
 	body.position = at
 	return body

@@ -8,13 +8,15 @@ config_version=5
 config/name="Shatterfall"
 config/version="0.1.0"
 config/features=PackedStringArray("4.7", "Mobile")
-run/main_scene="res://scenes/main/DungeonRun.tscn"
+config/icon="res://icon.svg"
+run/main_scene="res://scenes/main/MainHub.tscn"
 
 [autoload]
 
 SaveManager="*res://autoload/SaveManager.gd"
 GameState="*res://autoload/GameState.gd"
 EchoDirector="*res://autoload/EchoDirector.gd"
+BarkDirector="*res://autoload/BarkDirector.gd"
 
 [display]
 
@@ -40,3 +42,4 @@ pointing/emulate_touch_from_mouse=true
 
 renderer/rendering_method="mobile"
 renderer/rendering_method.mobile="mobile"
+textures/vram_compression/import_etc2_astc=true

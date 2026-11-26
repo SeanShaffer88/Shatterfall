@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <!-- Shatterfall placeholder icon: falling stained-glass shards on obsidian. -->
+  <rect width="256" height="256" rx="40" fill="#121318"/>
+  <g stroke="#0B0B0E" stroke-width="6" stroke-linejoin="round">
+    <polygon points="128,26 176,92 128,118 86,84" fill="#D92638"/>
+    <polygon points="86,84 128,118 104,172 54,142" fill="#8F4FD4"/>
+    <polygon points="176,92 210,150 160,176 128,118" fill="#E8912D"/>
+    <polygon points="104,172 128,118 160,176 132,230" fill="#5FD4E6"/>
+    <polygon points="54,142 104,172 86,214 40,190" fill="#D9A441"/>
+  </g>
+</svg>

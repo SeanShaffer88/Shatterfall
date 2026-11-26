@@ -4,6 +4,8 @@ extends RefCounted
 ## BLUEPRINT §2C with D5, D16, D17, D18, D25, D26, D31. Driven by data/weapons.json.
 
 var _cfg: Dictionary
+## Forge Window (D42): Stage 3 shard cost override; 0 = use weapons.json.
+var stage3_shard_cost_override: int = 0
 
 
 func _init(weapons_cfg: Dictionary) -> void:
@@ -198,7 +200,7 @@ func evolution_status(inv: Inventory, w: Weapon) -> Dictionary:
 		return {"available": false, "final": true, "level_ok": false, "shards_ok": false, "essence_ok": false, "recipe": {}}
 	var essence_id: String = recipe.get("boss_essence_id", "")
 	var level_ok := w.level >= int(recipe["req_level"])
-	var shards_ok := inv.shard_count(shard_id(w.weapon_class)) >= int(recipe["shard_cost"])
+	var shards_ok := inv.shard_count(shard_id(w.weapon_class)) >= shard_cost(recipe)
 	var essence_ok := essence_id == "" or inv.essence_count(essence_id) >= 1
 	return {
 		"available": level_ok and shards_ok and essence_ok, "final": false,
@@ -220,13 +222,20 @@ func evolve(inv: Inventory, uid: String) -> Dictionary:
 	if not status["available"]:
 		return _fail("evolution requirements not met")
 	var recipe: Dictionary = status["recipe"]
-	inv.add_shards(shard_id(w.weapon_class), -int(recipe["shard_cost"]))
+	inv.add_shards(shard_id(w.weapon_class), -shard_cost(recipe))
 	var essence_id: String = recipe.get("boss_essence_id", "")
 	if essence_id != "":
 		inv.add_essence(essence_id, -1)
 	w.evo_stage = int(recipe["stage"])
 	w.weapon_id = recipe["weapon_id"]
 	return {"ok": true, "error": "", "weapon_id": w.weapon_id, "evo_stage": w.evo_stage}
+
+
+## A recipe's shard cost after the Forge Window (D42).
+func shard_cost(recipe: Dictionary) -> int:
+	if int(recipe.get("stage", 0)) == 3 and stage3_shard_cost_override > 0:
+		return stage3_shard_cost_override
+	return int(recipe["shard_cost"])
 
 
 static func _fail(msg: String) -> Dictionary:

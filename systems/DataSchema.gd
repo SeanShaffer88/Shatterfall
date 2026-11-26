@@ -180,6 +180,55 @@ static func validate_weapons(data: Dictionary) -> Array[String]:
 	return c.errors
 
 
+const UNLOCK_TYPES: Array[String] = ["room_clear_heal", "echo_cap", "boon_offers", "room_drop_chance", "stage3_shard_cost", "ending"]
+
+
+static func validate_reliquary(data: Dictionary) -> Array[String]:
+	var c := Checker.new()
+	var g := c.obj(data, "glass", "")
+	for k in ["room_clear", "boss_kill", "salvage"]:
+		c.num(g, k, "glass", 0.0)
+	var windows := c.arr(data, "windows", "", 1)
+	for i in windows.size():
+		var p := "windows[%d]" % i
+		var w := c.obj(windows, i, "windows")
+		c.text(w, "id", p)
+		c.text(w, "name", p)
+		c.text(w, "color", p)
+		c.num(w, "glass", p, 0.0)
+		c.num(w, "essence", p, 0.0)
+		var u := c.obj(w, "unlock", p)
+		c.text(u, "type", p + ".unlock", UNLOCK_TYPES)
+		c.num(u, "value", p + ".unlock")
+		c.text(u, "text", p + ".unlock")
+	return c.errors
+
+
+const BARK_SPEAKERS := {
+	"VESPERA": ["RUN_START", "PHASE_TWO", "ADAPTATION", "HERO_DEATH", "DEFEAT"],
+	"RELIQUARY": ["FIRST_RUN", "FIRST_EVOLUTION", "WINDOW_RESTORED", "DEATH", "ROOM_CLEAR"],
+}
+const BARK_MIN_LINES := {"VESPERA": 4, "RELIQUARY": 3}
+
+
+static func validate_barks(data: Dictionary) -> Array[String]:
+	var c := Checker.new()
+	var r := c.obj(data, "rules", "")
+	for k in ["spacing", "duration", "repeat_runs", "room_clear_every"]:
+		c.num(r, k, "rules", 0.0)
+	var lines := c.obj(data, "lines", "")
+	for speaker in BARK_SPEAKERS:
+		var sp := c.obj(lines, speaker, "lines")
+		for trig in BARK_SPEAKERS[speaker]:
+			var tr := c.obj(sp, trig, "lines.%s" % speaker)
+			for variant in tr:
+				var path := "lines.%s.%s.%s" % [speaker, trig, variant]
+				var arr := c.arr(tr, variant, "lines.%s.%s" % [speaker, trig], BARK_MIN_LINES[speaker])
+				for i in arr.size():
+					c.text(arr, i, path)
+	return c.errors
+
+
 static func validate_stages(data: Dictionary) -> Array[String]:
 	var c := Checker.new()
 	var enemies := c.obj(data, "enemies", "")

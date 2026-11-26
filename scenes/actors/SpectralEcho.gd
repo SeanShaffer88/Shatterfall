@@ -7,6 +7,7 @@ extends Node3D
 ## never trigger Spiked Carapace recoil, while other adaptations still apply.
 
 signal attack_spawned(node: Area3D)
+signal hit_dealt(target: Node3D, hit: Dictionary)   # cyan damage numbers
 
 const ECHO_CYAN := Color("#5FD4E6")     # AD6: always cold cyan, even for warm weapons
 const POTENCY := 0.65
@@ -207,6 +208,7 @@ func _deal(target: Node3D, entry: Dictionary, extra: Dictionary = {}) -> void:
 	hit.merge(extra)
 	hits_dealt.append(hit)
 	var killed := Combat.apply_hit(target, hit)
+	hit_dealt.emit(target, hit)
 	if killed and marked and is_instance_valid(player):
 		player.heal(int(target.status_data("MARK").get("kill_heal", 0)))
 

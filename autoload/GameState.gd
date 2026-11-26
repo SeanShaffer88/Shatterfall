@@ -8,6 +8,8 @@ const DATA_DIR := "res://data/"
 var heroes_data: Dictionary = {}
 var weapons_data: Dictionary = {}
 var stages_data: Dictionary = {}
+var reliquary_data: Dictionary = {}
+var barks_data: Dictionary = {}
 var forge: WeaponForge
 
 var inventory: Inventory
@@ -16,6 +18,11 @@ var stars: Dictionary = {}                # stage_id -> { hero -> true }  (D7)
 var clears: Dictionary = {}               # stage_id -> { hero -> int }
 var last_clearing_hero: Dictionary = {}   # stage_id -> hero  (Grudge, D11)
 var forge_unlocked: bool = false          # D13: unlocked by the first boss kill
+var glass: int = 0                        # D42 currency
+var windows_restored: int = 0             # D42: windows restored, in order
+var runs_started: int = 0                 # first-run narrator line (D43)
+var evolutions_done: int = 0              # first-evolution narrator line (D43)
+var bark_history: Array = []              # D43: lines shown in each of the last runs
 
 # Seeded per run (D25). Separate streams keep loot rolls independent of combat rolls.
 var run_seed: int = 0
@@ -40,6 +47,8 @@ func load_data() -> String:
 		"heroes.json": DataSchema.validate_heroes,
 		"weapons.json": DataSchema.validate_weapons,
 		"stages.json": DataSchema.validate_stages,
+		"reliquary.json": DataSchema.validate_reliquary,
+		"barks.json": DataSchema.validate_barks,
 	}
 	var loaded := {}
 	for name in files:
@@ -50,6 +59,8 @@ func load_data() -> String:
 	heroes_data = loaded["heroes.json"]
 	weapons_data = loaded["weapons.json"]
 	stages_data = loaded["stages.json"]
+	reliquary_data = loaded["reliquary.json"]
+	barks_data = loaded["barks.json"]
 	forge = WeaponForge.new(weapons_data)
 	return ""
 
@@ -64,6 +75,12 @@ func reset_profile() -> void:
 	clears = {}
 	last_clearing_hero = {}
 	forge_unlocked = false
+	glass = 0
+	windows_restored = 0
+	runs_started = 0
+	evolutions_done = 0
+	bark_history = []
+	forge.stage3_shard_cost_override = 0
 
 
 func stage_cfg(stage_id: String) -> Dictionary:
@@ -71,7 +88,94 @@ func stage_cfg(stage_id: String) -> Dictionary:
 
 
 func loot_table(stage_id: String) -> LootTable:
-	return LootTable.new(stage_cfg(stage_id), weapons_data)
+	var t := LootTable.new(stage_cfg(stage_id), weapons_data)
+	var chance := unlock_value("room_drop_chance", -1.0)
+	if chance >= 0.0:
+		t.room_drop_chance_override = chance
+	return t
+
+
+# --- Restore the Reliquary (D42, §2I) -----------------------------------------------------
+
+func windows() -> Array:
+	return reliquary_data["windows"]
+
+
+## The restored unlock of `type`, or `fallback` when its window isn't restored.
+func unlock_value(type: String, fallback: float) -> float:
+	for i in mini(windows_restored, windows().size()):
+		var u: Dictionary = windows()[i]["unlock"]
+		if u["type"] == type:
+			return float(u["value"])
+	return fallback
+
+
+func room_clear_heal(stage_id: String) -> float:
+	return unlock_value("room_clear_heal", float(stage_cfg(stage_id)["room_clear_heal"]))
+
+
+func echo_cap() -> int:
+	return int(unlock_value("echo_cap", 2))
+
+
+func boon_offer_count(stage_id: String) -> int:
+	return int(unlock_value("boon_offers", float(stage_cfg(stage_id)["boon_offer_count"])))
+
+
+func reliquary_restored() -> bool:
+	return windows_restored >= windows().size()
+
+
+func glass_reward(kind: String) -> int:
+	return int(reliquary_data["glass"][kind])
+
+
+func add_glass(amount: int) -> void:
+	glass += amount
+
+
+## The next window in order, or {} when all are restored.
+func next_window() -> Dictionary:
+	return windows()[windows_restored] if windows_restored < windows().size() else {}
+
+
+## Restores the next window (order enforced) if Glass (and essence) suffice.
+## Result: { ok, error, window }.
+func restore_next_window() -> Dictionary:
+	var w := next_window()
+	if w.is_empty():
+		return {"ok": false, "error": "every window is already restored", "window": {}}
+	var essence := int(w["essence"])
+	if glass < int(w["glass"]):
+		return {"ok": false, "error": "needs %d Glass" % int(w["glass"]), "window": w}
+	if essence > 0 and inventory.essence_count("VESPERA_ESSENCE") < essence:
+		return {"ok": false, "error": "needs a Vespera essence", "window": w}
+	glass -= int(w["glass"])
+	if essence > 0:
+		inventory.add_essence("VESPERA_ESSENCE", -essence)
+	windows_restored += 1
+	_apply_unlocks()
+	return {"ok": true, "error": "", "window": w}
+
+
+func _apply_unlocks() -> void:
+	forge.stage3_shard_cost_override = int(unlock_value("stage3_shard_cost", 0))
+
+
+## Salvage from the Hub: shards (D31) plus Glass (D42).
+func salvage(uid: String) -> Dictionary:
+	var r := forge.salvage(inventory, uid)
+	if r["ok"]:
+		add_glass(glass_reward("salvage"))
+		r["glass"] = glass_reward("salvage")
+	return r
+
+
+func evolve(uid: String) -> Dictionary:
+	var r := forge.evolve(inventory, uid)
+	if r["ok"]:
+		evolutions_done += 1
+	return r
 
 
 # --- Runs (D25) --------------------------------------------------------------
@@ -79,6 +183,7 @@ func loot_table(stage_id: String) -> LootTable:
 func begin_run(hero: String, seed_value: int) -> void:
 	assert(hero in HEROES, "unknown hero '%s'" % hero)
 	active_hero = hero
+	runs_started += 1
 	run_seed = seed_value
 	rng_combat.seed = seed_value
 	rng_loot.seed = seed_value + 1_000_003
@@ -150,6 +255,11 @@ func to_save_dict() -> Dictionary:
 			"clears": clears.duplicate(true),
 			"last_clearing_hero": last_clearing_hero.duplicate(),
 			"forge_unlocked": forge_unlocked,
+			"glass": glass,
+			"windows_restored": windows_restored,
+			"runs_started": runs_started,
+			"evolutions_done": evolutions_done,
+			"bark_history": bark_history.duplicate(true),
 		},
 		"inventory": inventory.to_dict(),
 	}
@@ -186,4 +296,12 @@ func apply_save_dict(d: Dictionary) -> String:
 			clears[stage_id][hero] = int(p["clears"][stage_id][hero])
 	last_clearing_hero = p["last_clearing_hero"].duplicate()
 	forge_unlocked = p["forge_unlocked"]
+	# Phase 5 fields: saves written before them start at zero.
+	glass = int(p.get("glass", 0))
+	windows_restored = clampi(int(p.get("windows_restored", 0)), 0, windows().size())
+	runs_started = int(p.get("runs_started", 0))
+	evolutions_done = int(p.get("evolutions_done", 0))
+	var hist = p.get("bark_history", [])
+	bark_history = hist if typeof(hist) == TYPE_ARRAY else []
+	_apply_unlocks()
 	return ""
