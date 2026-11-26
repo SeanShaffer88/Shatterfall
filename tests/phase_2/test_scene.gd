@@ -38,18 +38,40 @@ func _rig_for(s: CombatSim) -> CameraRig:
 func test_camera_rig_matches_d3(t: TestContext) -> void:
 	sim = CombatSim.new(_tree(), "BRUTE")
 	var rig := _rig_for(sim)
-	var p := deg_to_rad(40.0)
+	var p := deg_to_rad(55.0)
 	t.ok(rig.top_level, "rig is top-level (never inherits hero rotation)")
-	t.ok(rig.camera.position.distance_to(Vector3(0, 11.0 * sin(p), 11.0 * cos(p))) < 1e-5, "11 m boom at 40° pitch")
-	t.near(rig.camera.rotation_degrees.x, -40.0, 1e-4, "pitch −40°")
-	t.near(rig.camera.fov, 45.0, 1e-6, "FOV 45°")
+	t.ok(rig.camera.position.distance_to(Vector3(0, 30.0 * sin(p), 30.0 * cos(p))) < 1e-5, "30 m boom at 55° pitch")
+	t.near(rig.camera.rotation_degrees.x, -55.0, 1e-4, "pitch −55°")
+	t.near(rig.global_rotation_degrees.y, 45.0, 1e-4, "isometric 45° yaw (Q-11)")
+	t.near(rig.camera.fov, 30.0, 1e-6, "FOV 30°")
 	t.ok(rig.camera.current, "camera is current")
 	var to_hero := (sim.hero.global_position - rig.camera.global_position).normalized()
 	var look := -rig.camera.global_transform.basis.z
 	t.ok(look.angle_to(to_hero) < 0.001, "camera looks straight at the hero")
 	sim.hero.rotation.y = 2.0
 	rig.tick(CombatSim.DT)
-	t.near(rig.camera.global_rotation_degrees.y, 0.0, 1e-4, "hero rotation never turns the camera")
+	t.near(rig.camera.global_rotation_degrees.y, 45.0, 1e-4, "hero rotation never turns the camera")
+
+
+func test_stick_up_moves_up_on_screen(t: TestContext) -> void:
+	sim = CombatSim.new(_tree(), "ROGUE")
+	var rig := _rig_for(sim)
+	var vp := SubViewport.new()
+	vp.size = Vector2i(2400, 1080)
+	_keep(vp)
+	_tree().root.add_child(vp)
+	var cam := Camera3D.new()
+	vp.add_child(cam)
+	cam.fov = rig.camera.fov
+	cam.global_transform = rig.camera.global_transform
+	for case in [[Vector2(0, -1), "up", Vector2(0, -1)], [Vector2(1, 0), "right", Vector2(1, 0)]]:
+		sim.hero.global_position = Vector3.ZERO
+		var before := cam.unproject_position(sim.hero.global_position)
+		sim.hero.input_vector = rig.screen_to_world(case[0])
+		sim.step(10)
+		var moved := (cam.unproject_position(sim.hero.global_position) - before).normalized()
+		t.ok(moved.dot(case[2]) > 0.99, "stick %s moves the hero %s on screen (got %s)" % [case[1], case[1], str(moved)])
+	sim.hero.input_vector = Vector2.ZERO
 
 
 func test_camera_follow_smoothing(t: TestContext) -> void:
@@ -212,8 +234,9 @@ func test_dungeon_run_scene_smoke(t: TestContext) -> void:
 	t.eq(run.hud.buttons.size(), 3, "3 skill buttons")
 	t.eq(run.hud.buttons[0].label_text, "SHADOW VAULT", "buttons bound to the hero's skills")
 	t.ok(run.hero_input.hero == run.hero and run.hero_input.stick == run.hud.stick, "input wired to hero and stick")
-	t.eq(run.arena.get_node("DummyA").get("max_hp"), 300, "gray-box arena with training dummies")
+	t.eq(run.stage.rooms.size(), StageLayout.ROOM_COUNT + 1, "stage built: 4 rooms + boss arena")
+	t.eq(run.stage.doors.size(), StageLayout.ROOM_COUNT, "a door per corridor")
 	for i in 30:
 		run.hero._physics_process(CombatSim.DT)
 		run.hero.skills.tick(CombatSim.DT)
-	t.ok(run.hero.hp == run.hero.max_hp, "hero idles safely")
+	t.ok(run.hero.hp > 0, "hero survives the first moments")

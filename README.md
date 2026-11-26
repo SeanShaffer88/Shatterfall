@@ -30,4 +30,10 @@ Windowed playtest bot (real renderer; plays one hero through walk → attack →
 godot --path . --resolution 1200x540 -s res://tests/tools/playtest_bot.gd -- --hero=ROGUE --out=<folder>
 ```
 
+Full-run autopilot (walks, fights, takes a boon, fights Vespera; logs events and screenshots):
+
+```bash
+godot --path . --resolution 1200x540 -s res://tests/tools/run_bot.gd -- --hero=MAGI --out=<folder> --speed=3
+```
+
 Headless gates verify logic only; Phase 6 is a manual on-device checklist (Galaxy S24 Ultra, 60 fps target).

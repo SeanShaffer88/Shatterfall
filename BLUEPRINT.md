@@ -14,7 +14,7 @@
 |---|----------|----------|
 | D1 | Orientation | **Landscape.** Base resolution 2400×1080, `canvas_items` stretch, aspect `expand`. **Two-thumb** layout: virtual stick bottom-left, 3 skill buttons bottom-right. |
 | D2 | Renderer | **Mobile renderer** (Vulkan) for **all** builds, including Windows dev builds, so lighting and art are always judged on the shipping renderer. *(rev. D39)* |
-| D3 | Camera | Fixed follow top-down: pitch **40°**, boom length **11 m**, FOV 45°, target lock with 0.15 s smoothing. No player zoom, no rotation. |
+| D3 | Camera | Fixed **isometric 3/4** follow: yaw **45°**, pitch **55°**, boom length **30 m**, FOV **30°** (flat, long-lens look; reference: Hunt Royale boss hunts), target lock with 0.15 s smoothing. No player zoom, no rotation. Stick input is turned by the yaw so "up" is up on screen. *(rev. Q-11)* |
 | D4 | Dimension / units | Full 3D (`CharacterBody3D`, `Area3D`, `Vector3`). All tuning in **meters and m/s**. No 2D px/s units anywhere. |
 | D5 | Weapon binding | **Hero-locked weapons.** Brute = Greataxe, Rogue = Daggers *and* Shortbow (two classes, both Rogue-only; mode switches with range), Magi = Staff. Off-class drops are marked "Not usable" in inventory and can only be salvaged. |
 | D6 | Run length | Target **6–9 minutes** per full stage run (4 rooms + boss). |
@@ -214,7 +214,7 @@ func _execute_primary_attack() -> void:
 
 **Rogue swap rule (normative, D28):** Bow→Daggers when the nearest enemy is `<= 2.6 m`; Daggers→Bow when it is `> 3.0 m`; no attack beyond 10.5 m (walk closer). The first evaluation of a run starts in Bow mode. Every mode change emits `rogue_mode_changed` exactly once.
 
-**Camera rig (D3):** `Camera3D` on a boom parenting the hero: pitch −40°, distance 11 m, FOV 45°, position lerp 0.15 s, fixed orientation. Verify the hero and the bottom UI never overlap at 2400×1080 and at 19.5:9 (S24 Ultra native is 3120×1440; test 16:9 and 19.5:9 crops).
+**Camera rig (D3):** a top-level pivot turned 45° about the vertical follows the hero (0.15 s smoothing); its `Camera3D` sits on a 30 m boom at pitch −55°, FOV 30°, fixed orientation. `HeroInput` rotates screen-space input by −45° before it reaches `input_vector`, so this §2A code stays world-space. Verify the hero and the bottom UI never overlap at 2400×1080 and at 19.5:9 (S24 Ultra native is 3120×1440; test 16:9 and 19.5:9 crops).
 
 ### B. Spectral Echo System (`EchoDirector.gd`)
 

@@ -9,7 +9,7 @@
 ## 1. Per-Hero Look (silhouette-first, AD1–AD4)
 
 ### AD1 — Silhouette-first rule
-At a fixed 40°-pitch top-down camera on a phone screen, recognition comes from **helm shape, shoulder line, and weapon profile** — not surface detail. Design each hero so their black silhouette is unmistakable in a single-color test. Surface detail budget stays near zero in the slice; time spent on micro-detail before Phase 5 is wasted.
+At the fixed isometric 3/4 camera (55° pitch, 45° yaw, D3) on a phone screen, recognition comes from **helm shape, shoulder line, and weapon profile** — not surface detail. Design each hero so their black silhouette is unmistakable in a single-color test. Surface detail budget stays near zero in the slice; time spent on micro-detail before Phase 5 is wasted.
 
 ### AD2 — Brute: charred plate, ember cracks
 Charred, layered plate with bone/scale edges; jagged asymmetric silhouette; horned/crested helm profile. **Combat tie:** cracks in the armor plate glow with crimson ember light proportional to **Crimson Guard** charge — dim when shielded at 10%, fully lit at the 30% cap, dark when broken. This is the shield's primary readability channel (verify in Gate 3 that the emissive intensity tracks the Guard value).

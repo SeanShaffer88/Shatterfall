@@ -123,6 +123,15 @@ func _damage(d: Dictionary, mode: String = "") -> Dictionary:
 	return {}
 
 
+## Area-of-effect info carried on hits and statuses, so Runic Dampening (§2H)
+## can shrink the radius and duration that apply to Vespera.
+func _aoe(center: Vector3, radius: float, data: Dictionary = {}) -> Dictionary:
+	var d := data.duplicate()
+	d["aoe_center"] = center
+	d["aoe_radius"] = radius
+	return d
+
+
 func _tree() -> SceneTree:
 	return hero.get_tree()
 
@@ -149,8 +158,8 @@ func _cast_leap_slam(d: Dictionary) -> bool:
 		var at := hero.global_position
 		hero.spawn_hitbox("LEAP_SLAM", at, float(p["radius"]))
 		for e in Combat.in_radius(_tree(), at, float(p["radius"])):
-			hero.deal(e, dmg["weapon_class"], float(dmg["damage_l1"]), "LEAP_SLAM")
-			e.apply_status("STUN", {"duration": float(p["stun"])}))
+			hero.deal(e, dmg["weapon_class"], float(dmg["damage_l1"]), "LEAP_SLAM", _aoe(at, float(p["radius"])))
+			e.apply_status("STUN", _aoe(at, float(p["radius"]), {"duration": float(p["stun"])})))
 	return true
 
 
@@ -159,7 +168,7 @@ func _cast_rending_roar(d: Dictionary) -> bool:
 	var at := hero.global_position
 	hero.spawn_hitbox("RENDING_ROAR", at, float(p["radius"]))
 	for e in Combat.in_radius(_tree(), at, float(p["radius"])):
-		e.apply_status("WEAKEN", {"duration": float(p["duration"]), "damage_mult": float(p["enemy_damage_mult"])})
+		e.apply_status("WEAKEN", _aoe(at, float(p["radius"]), {"duration": float(p["duration"]), "damage_mult": float(p["enemy_damage_mult"])}))
 	for s in int(p["guard_stacks"]):
 		hero.add_guard_stack()
 	_lock(d)
@@ -172,7 +181,7 @@ func _cast_vortex_cleave(d: Dictionary) -> bool:
 	var dmg := _damage(d)
 	hero.spawn_hitbox("VORTEX_CLEAVE", at, float(p["radius"]))
 	for e in Combat.in_radius(_tree(), at, float(p["radius"])):
-		hero.deal(e, dmg["weapon_class"], float(dmg["damage_l1"]), "VORTEX_CLEAVE")
+		hero.deal(e, dmg["weapon_class"], float(dmg["damage_l1"]), "VORTEX_CLEAVE", _aoe(at, float(p["radius"])))
 		var to_hero := Combat.flat(at - e.global_position)
 		var pull := minf(VORTEX_PULL, maxf(0.0, to_hero.length() - 1.0))
 		if pull > 0.0:
@@ -263,7 +272,8 @@ func _cast_gravity_well(d: Dictionary) -> bool:
 	zone.tick_interval = 1.0
 	zone.on_tick = func() -> void:
 		for e in Combat.in_radius(_tree(), zone.global_position, radius):
-			hero.deal(e, dmg["weapon_class"], float(dmg["damage_l1"]), "GRAVITY_WELL")
+			var info := _aoe(zone.global_position, radius, {"zone_age": zone._age, "zone_duration": zone.duration})
+			hero.deal(e, dmg["weapon_class"], float(dmg["damage_l1"]), "GRAVITY_WELL", info)
 	zone.on_physics = func(delta: float) -> void:
 		for e in Combat.in_radius(_tree(), zone.global_position, radius):
 			var to_center := Combat.flat(zone.global_position - e.global_position)
@@ -279,7 +289,7 @@ func _cast_shatter_nova(d: Dictionary) -> bool:
 	var dmg := _damage(d)
 	hero.spawn_hitbox("SHATTER_NOVA", at, float(p["radius"]))
 	for e in Combat.in_radius(_tree(), at, float(p["radius"])):
-		hero.deal(e, dmg["weapon_class"], float(dmg["damage_l1"]), "SHATTER_NOVA")
+		hero.deal(e, dmg["weapon_class"], float(dmg["damage_l1"]), "SHATTER_NOVA", _aoe(at, float(p["radius"])))
 		var away := Combat.flat(e.global_position - at)
 		e.displace((away.normalized() if away.length() > 0.001 else hero.forward()) * NOVA_KNOCKBACK)
 	_lock(d)

@@ -127,6 +127,8 @@ signal damaged(hp_lost: int, absorbed_by: String)
 signal died
 signal guard_changed(fraction: float)
 signal barrier_changed(up: bool)
+signal hit_dealt(target: Node3D, hit: Dictionary)   # every hit this hero lands (stars, D9)
+signal second_wind_triggered
 
 const ARROW_SPEED := 30.0                    # m/s (Q-9)
 const BOLT_SPEED := 16.0                     # m/s (Q-9)
@@ -143,6 +145,13 @@ var barrier_up: bool = false                 # Arcane Glass Barrier
 var barrier_timer: float = 0.0
 var invuln_timer: float = 0.0
 var next_dagger_bonus: float = 0.0           # Shadow Vault: next dagger pair +50%
+
+# Run-only boon state (§2F, D14). A new run spawns a new hero, so nothing carries over.
+var boons: Array[String] = []
+var damage_mult: float = 1.0                 # Crimson Surcharge
+var attack_speed_mult: float = 1.0           # Tempest Heart
+var projectile_taken_mult: float = 1.0       # Amber Ward
+var second_wind: Dictionary = {}             # Second Wind: {threshold, heal}, cleared when used
 
 @onready var skills: HeroSkills = $Skills
 @onready var visuals: HeroVisuals = $Visuals
@@ -233,15 +242,17 @@ func deal(target: Node3D, weapon_class: String, damage_l1: float, source: String
 	if marked:
 		mark_mult = float(target.status_data("MARK").get("damage_taken_mult", 1.0))
 	var hit := {
-		"damage": GameState.forge.damage(w, damage_l1, 1.0, mark_mult, crit),
+		"damage": GameState.forge.damage(w, damage_l1, damage_mult, mark_mult, crit),   # D25 boon_mult
 		"crit": crit,
 		"source": source,
 		"hero": hero_id,
 		"is_echo": false,
 		"weapon_class": weapon_class,
 	}
+	hit["origin"] = global_position
 	hit.merge(extra)
 	var killed := Combat.apply_hit(target, hit)
+	hit_dealt.emit(target, hit)
 	if killed and marked:
 		heal(int(target.status_data("MARK").get("kill_heal", 0)))
 	return hit
@@ -289,6 +300,7 @@ func _fire_cleave_arc() -> void:
 	if hits.size() >= int(cfg["passive"]["params"]["min_targets"]):
 		add_guard_stack()
 	primary_attack_fired.emit("CLEAVE", current_target)
+	attack_timer /= attack_speed_mult      # Tempest Heart (§2A sets the base cadence)
 
 
 func _fire_dagger_flurry(target: Node3D) -> void:
@@ -299,6 +311,7 @@ func _fire_dagger_flurry(target: Node3D) -> void:
 	for i in int(a["hits"]):
 		deal(target, "DAGGERS", dmg, "DAGGER_FLURRY")
 	primary_attack_fired.emit("DAGGER_FLURRY", target)
+	attack_timer /= attack_speed_mult      # Tempest Heart (§2A sets the base cadence)
 
 
 func _fire_bow_arrow(target: Node3D) -> void:
@@ -308,6 +321,7 @@ func _fire_bow_arrow(target: Node3D) -> void:
 		float(a["reach"]) + ARROW_OVERSHOOT, null,
 		func(e: Node3D) -> void: deal(e, "SHORTBOW", dmg, "BOW_ARROW"))
 	primary_attack_fired.emit("BOW_ARROW", target)
+	attack_timer /= attack_speed_mult      # Tempest Heart (§2A sets the base cadence)
 
 
 ## AD4: every Prism Bolt leaves from the staff's orb-tipped focus.
@@ -318,15 +332,18 @@ func _fire_prism_bolt(target: Node3D) -> void:
 		float(a["reach"]) + ARROW_OVERSHOOT, target,
 		func(e: Node3D) -> void: deal(e, "STAFF", dmg, "PRISM_BOLT"))
 	primary_attack_fired.emit("PRISM_BOLT", target)
+	attack_timer /= attack_speed_mult      # Tempest Heart (§2A sets the base cadence)
 
 
 # --- Damage intake and passives (§2D, D29) -----------------------------------------
 
 ## Order: invulnerability → Arcane Glass Barrier (absorbs the whole hit) →
 ## Crimson Guard → HP. Any hit grants 0.4 s invulnerability. Returns HP lost.
-func take_damage(amount: int, _source: Dictionary = {}) -> int:
+func take_damage(amount: int, source: Dictionary = {}) -> int:
 	if hp <= 0 or invuln_timer > 0.0:
 		return 0
+	if source.get("projectile", false):
+		amount = maxi(1, roundi(amount * projectile_taken_mult))   # Amber Ward
 	invuln_timer = float(GameState.heroes_data["combat"]["hit_invulnerability"])
 	if barrier_up:
 		_set_barrier(false)
@@ -341,7 +358,34 @@ func take_damage(amount: int, _source: Dictionary = {}) -> int:
 	damaged.emit(lost, "GUARD" if absorbed > 0.0 else "")
 	if hp == 0:
 		died.emit()
+	else:
+		_check_second_wind()
 	return lost
+
+
+## Spiked Carapace recoil (§2H): Crimson Guard soaks it first; it never drops the
+## hero below 1 HP, ignores and never grants hit invulnerability.
+func apply_recoil(amount: int) -> int:
+	if hp <= 0 or amount <= 0:
+		return 0
+	var absorbed := minf(guard, float(amount))
+	if absorbed > 0.0:
+		guard -= absorbed
+		guard_changed.emit(guard_fraction())
+	var lost := mini(int(roundf(float(amount) - absorbed)), hp - 1)
+	hp -= lost
+	if lost > 0:
+		damaged.emit(lost, "RECOIL")
+		_check_second_wind()
+	return lost
+
+
+func _check_second_wind() -> void:
+	if not second_wind.is_empty() and hp > 0 and hp < max_hp * float(second_wind["threshold"]):
+		var amount := roundi(max_hp * float(second_wind["heal"]))
+		second_wind = {}
+		heal(amount)
+		second_wind_triggered.emit()
 
 
 func heal(amount: int) -> void:
