@@ -24,4 +24,10 @@ godot --headless --path . --import   # fresh clone only
 godot --headless --path . -s res://tests/test_core_systems.gd
 ```
 
+Windowed playtest bot (real renderer; plays one hero through walk → attack → skills and saves screenshots):
+
+```bash
+godot --path . --resolution 1200x540 -s res://tests/tools/playtest_bot.gd -- --hero=ROGUE --out=<folder>
+```
+
 Headless gates verify logic only; Phase 6 is a manual on-device checklist (Galaxy S24 Ultra, 60 fps target).

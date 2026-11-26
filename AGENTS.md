@@ -27,6 +27,7 @@
 - Art is **gray-box placeholder meshes + `stained_glass_echo.gdshader`** only. Visual language rules and emissive hooks are locked in `ART_DIRECTION.md` (AD1–AD12); bake AD2/AD3/AD4 emissive hooks into `HeroActor.tscn` during Phase 2. No custom modeled art in the slice.
 - `Engine.time_scale` effects must respect the Echo timing caveat (`BLUEPRINT.md` §2B).
 - Echo damage/kills never count toward star conditions (D9); boons are run-only (D14).
+- Tests step gameplay manually at a fixed 1/60 s (`tests/lib/CombatSim.gd`). `move_and_slide()` moves by the *engine's* physics delta, so the runner waits for one real physics frame first; never step physics bodies before that.
 - All gameplay timers use scaled physics `delta` (D36); all randomness goes through `GameState`'s seeded RNG streams (D25).
 - Say `rarity` (drop quality 1–3) and `evo_stage` (evolution 1–3); the word "tier" is retired (D26).
 

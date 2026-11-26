@@ -53,6 +53,8 @@ func _on_watchdog() -> void:
 
 func _run() -> void:
 	await process_frame  # let autoloads finish _ready()
+	await physics_frame  # one real physics step, so the engine physics delta is 1/60 s
+	                     # (move_and_slide uses it even when tests step manually)
 	var startup_errors := _catcher.take()
 	var passed := 0
 	var failed := 0

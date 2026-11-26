@@ -14,7 +14,7 @@
 |---|----------|----------|
 | D1 | Orientation | **Landscape.** Base resolution 2400×1080, `canvas_items` stretch, aspect `expand`. **Two-thumb** layout: virtual stick bottom-left, 3 skill buttons bottom-right. |
 | D2 | Renderer | **Mobile renderer** (Vulkan) for **all** builds, including Windows dev builds, so lighting and art are always judged on the shipping renderer. *(rev. D39)* |
-| D3 | Camera | Fixed follow top-down: pitch **40°**, boom height **11 m**, FOV 45°, target lock with 0.15 s smoothing. No player zoom, no rotation. |
+| D3 | Camera | Fixed follow top-down: pitch **40°**, boom length **11 m**, FOV 45°, target lock with 0.15 s smoothing. No player zoom, no rotation. |
 | D4 | Dimension / units | Full 3D (`CharacterBody3D`, `Area3D`, `Vector3`). All tuning in **meters and m/s**. No 2D px/s units anywhere. |
 | D5 | Weapon binding | **Hero-locked weapons.** Brute = Greataxe, Rogue = Daggers *and* Shortbow (two classes, both Rogue-only; mode switches with range), Magi = Staff. Off-class drops are marked "Not usable" in inventory and can only be salvaged. |
 | D6 | Run length | Target **6–9 minutes** per full stage run (4 rooms + boss). |
@@ -131,6 +131,7 @@ func _physics_process(delta: float) -> void:
 		if lock_timer <= 0.0:
 			state = CombatState.MOVING
 			stop_timer = 0.0
+			velocity = Vector3.ZERO          # a lock never leaves leftover leap/dash momentum
 		move_and_slide()
 		return
 
@@ -397,24 +398,39 @@ res://
 │   ├── Inventory.gd          # Weapons, mains (D18), shards, essences
 │   ├── WeaponForge.gd        # Absorb / salvage / Build-Up + power math (§2C, D25, D31)
 │   ├── LootTable.gd          # Drop rolls + grudge bias (D19, D30)
+│   ├── Combat.gd             # Layers, enemy contract, geometric hit queries
 │   ├── DataLoader.gd         # Fail-loud JSON loading (D22)
 │   └── DataSchema.gd         # Field validators for data/*.json
 ├── scenes/
 │   ├── main/
 │   │   ├── MainHub.tscn      # Hero trio selector, Stage Briefing, Weapon Forge drawer
-│   │   └── DungeonRun.tscn   # Landscape HUD, virtual stick, 3 skill buttons, Boon modal, pause
+│   │   ├── DungeonRun.tscn   # Landscape HUD, virtual stick, 3 skill buttons, Boon modal, pause
+│   │   ├── CameraRig.gd      # D3 follow camera
+│   │   └── HeroInput.gd      # Stick + WASD/arrows, J/K/L or 1/2/3 skills
+│   ├── ui/
+│   │   ├── RunHud.gd         # Stats, stick and skill-button layout
+│   │   ├── VirtualStick.gd   # Multi-touch floating stick
+│   │   └── SkillButton.gd    # Radial cooldown ring
 │   ├── actors/
 │   │   ├── HeroActor.tscn    # CharacterBody3D + HeroController + WeaponMeshMount
+│   │   ├── HeroController.gd # §2A verbatim + kit, damage intake, passives
+│   │   ├── HeroSkills.gd     # 9 skills, D27 aiming/locks/buffer, cooldowns
+│   │   ├── HeroVisuals.gd    # Gray-box silhouettes + AD2/AD3/AD4 emissive hooks
+│   │   ├── Hitbox.gd         # Area3D attack areas and zones
+│   │   ├── Projectile.gd     # Area3D arrows / Prism Bolts
+│   │   ├── TrainingDummy.gd  # Gray-box target (enemy contract, no AI)
 │   │   ├── SpectralEcho.tscn # Translucent stained-glass ghost executor
 │   │   ├── EnemyBase.tscn    # Crawler / Spitter / Bulwark AI + telegraph decals
 │   │   └── BossVespera.tscn  # 2-phase boss + Grudge Adaptation handler
 │   └── rooms/
+│       ├── GrayboxArena.tscn # Phase 2 empty arena + training dummies
 │       └── Stage01_Nave.tscn # 4 rooms + boss arena, EchoAnchor per room, gates, spike traps
 ├── shaders/
 │   └── stained_glass_echo.gdshader
 └── tests/
     ├── test_core_systems.gd  # Runner (extends SceneTree), quit(0/1) (D38)
     ├── lib/TestContext.gd    # Assertion collector
+    ├── lib/CombatSim.gd      # Fixed-step hero + dummies sandbox
     └── phase_1/ … phase_5/   # Per-phase suites, all run by the runner
 ```
 

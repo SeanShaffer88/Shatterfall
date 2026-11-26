@@ -1,0 +1,28 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scenes/actors/HeroController.gd" id="1_ctrl"]
+[ext_resource type="Script" path="res://scenes/actors/HeroSkills.gd" id="2_skills"]
+[ext_resource type="Script" path="res://scenes/actors/HeroVisuals.gd" id="3_vis"]
+
+[sub_resource type="CapsuleShape3D" id="Capsule_body"]
+radius = 0.4
+height = 1.8
+
+[node name="HeroActor" type="CharacterBody3D"]
+collision_layer = 2
+collision_mask = 1
+motion_mode = 1
+script = ExtResource("1_ctrl")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("Capsule_body")
+
+[node name="Visuals" type="Node3D" parent="."]
+script = ExtResource("3_vis")
+
+[node name="WeaponMeshMount" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6, 1, 0.3)
+
+[node name="Skills" type="Node" parent="."]
+script = ExtResource("2_skills")

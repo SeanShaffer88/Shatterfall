@@ -1,0 +1,90 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scenes/main/DungeonRun.gd" id="1_run"]
+[ext_resource type="PackedScene" path="res://scenes/rooms/GrayboxArena.tscn" id="2_arena"]
+[ext_resource type="Script" path="res://scenes/main/CameraRig.gd" id="3_cam"]
+[ext_resource type="Script" path="res://scenes/main/HeroInput.gd" id="4_input"]
+[ext_resource type="Script" path="res://scenes/ui/RunHud.gd" id="5_hud"]
+[ext_resource type="Script" path="res://scenes/ui/VirtualStick.gd" id="6_stick"]
+[ext_resource type="Script" path="res://scenes/ui/SkillButton.gd" id="7_skill"]
+
+[node name="DungeonRun" type="Node3D"]
+script = ExtResource("1_run")
+
+[node name="Arena" parent="." instance=ExtResource("2_arena")]
+
+[node name="CameraRig" type="Node3D" parent="."]
+script = ExtResource("3_cam")
+
+[node name="HeroInput" type="Node" parent="."]
+script = ExtResource("4_input")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="RunHud" type="Control" parent="HUD"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("5_hud")
+
+[node name="Stats" type="Label" parent="HUD/RunHud"]
+layout_mode = 0
+offset_left = 48.0
+offset_top = 48.0
+offset_right = 1048.0
+offset_bottom = 100.0
+theme_override_font_sizes/font_size = 34
+text = "HP"
+
+[node name="VirtualStick" type="Control" parent="HUD/RunHud"]
+layout_mode = 1
+anchor_top = 0.35
+anchor_right = 0.42
+anchor_bottom = 1.0
+offset_left = 48.0
+offset_bottom = -48.0
+mouse_filter = 2
+script = ExtResource("6_stick")
+
+[node name="Skill1" type="Control" parent="HUD/RunHud"]
+layout_mode = 1
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -268.0
+offset_top = -268.0
+offset_right = -48.0
+offset_bottom = -48.0
+script = ExtResource("7_skill")
+index = 0
+
+[node name="Skill2" type="Control" parent="HUD/RunHud"]
+layout_mode = 1
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -530.0
+offset_top = -228.0
+offset_right = -350.0
+offset_bottom = -48.0
+script = ExtResource("7_skill")
+index = 1
+
+[node name="Skill3" type="Control" parent="HUD/RunHud"]
+layout_mode = 1
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -248.0
+offset_top = -520.0
+offset_right = -68.0
+offset_bottom = -340.0
+script = ExtResource("7_skill")
+index = 2
