@@ -168,6 +168,8 @@ func _cast(e: Dictionary) -> void:
 		point = Combat.flat(e["target_node"].global_position)
 	var actor := SpectralEcho.new()
 	actor.setup(e["hero"], e["skill"], e["mode"], run.hero)
+	if run.feedback != null:
+		actor.hit_dealt.connect(run.feedback.on_echo_hit)   # cyan numbers, connected before the cast lands
 	run.stage.add_child(actor)
 	actor.global_position = e["origin"] if e["skill"] in FROM_RECORDED_POSITION else point
 	actors.append(actor)

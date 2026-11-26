@@ -56,12 +56,14 @@ var guard_time: float = 0.0
 var dagger_hits: int = 0
 var room_hp_lost: Dictionary = {}          # room index -> HP lost while its waves were live
 var rooms_completed: Array[int] = []
+var glass_earned: int = 0                  # D42, shown in the summary
 
 var _wave_timer: float = -1.0
 var _spawn_timer: float = -1.0
 var _spawn_plan: Array[Dictionary] = []
 var _spawn_markers: Array[Telegraph] = []
 var _boss_intro: float = -1.0
+var feedback: RunFeedback
 
 
 func _ready() -> void:
@@ -82,11 +84,17 @@ func _ready() -> void:
 	hero.hit_dealt.connect(_on_hit_dealt)
 	hero.damaged.connect(_on_hero_damaged)
 	hero.skill_cast_at.connect(_on_skill_cast_at)
+	feedback = RunFeedback.new()
+	feedback.name = "Feedback"
+	add_child(feedback)
+	hero.hit_dealt.connect(feedback.on_hero_hit)
+	EchoDirector.cap_per_wave = GameState.echo_cap()
 	EchoDirector.begin_recording(STAGE_ID, id)
 	echo_player = EchoPlayer.new()
 	echo_player.name = "EchoPlayer"
 	add_child(echo_player)
 	echo_player.setup(self, EchoDirector.events_for(STAGE_ID, id))
+	BarkDirector.begin_run(id)
 	for trap in stage.traps:
 		trap.hero = hero
 	camera_rig.follow(hero)
@@ -95,6 +103,10 @@ func _ready() -> void:
 	hud.bind_run(self)
 	process_mode = Node.PROCESS_MODE_PAUSABLE
 	_start_room(0)
+	if GameState.runs_started <= 1:
+		BarkDirector.say("RELIQUARY", "FIRST_RUN")
+	else:
+		BarkDirector.say("VESPERA", "RUN_START", grudge_hero if grudge_hero != "" else "FIRST")
 
 
 func _physics_process(delta: float) -> void:
@@ -148,13 +160,15 @@ func _start_room(i: int) -> void:
 	room_hp_lost[i] = 0
 	for trap in stage.traps:
 		trap.arm(i == 2)
+	stage.assemble(i)
 	room_started.emit(i)
 	_queue_wave(0, true)
 
 
 func _queue_wave(w: int, first: bool) -> void:
 	wave = w
-	_wave_timer = 0.0 if first else float(GameState.stages_data["wave_rules"]["next_wave_delay"])
+	# AD13: a room's first wave waits for its glass to finish assembling.
+	_wave_timer = StageLayout.ASSEMBLY_TIME if first else float(GameState.stages_data["wave_rules"]["next_wave_delay"])
 	_spawn_timer = -1.0
 
 
@@ -244,12 +258,15 @@ func _clear_room() -> void:
 	for trap in stage.traps:
 		trap.arm(false)
 	rooms_completed.append(room)
-	hero.heal(roundi(hero.max_hp * float(cfg["room_clear_heal"])))
+	hero.heal(roundi(hero.max_hp * GameState.room_clear_heal(STAGE_ID)))
+	glass_earned += GameState.glass_reward("room_clear")
+	GameState.add_glass(GameState.glass_reward("room_clear"))
 	var drop := GameState.loot_table(STAGE_ID).roll_room_drop(GameState.rng_loot, hero.hero_id, grudge_hero)
 	if not drop.is_empty():
 		run_drops.append(GameState.grant_drop(drop).to_dict())
 	SaveManager.save_profile()
 	room_cleared.emit(room)
+	BarkDirector.room_cleared()
 	if room + 1 == int(cfg["boon_draft_before_room"]):
 		_open_draft()
 	else:
@@ -269,7 +286,7 @@ func _enter(next: int) -> void:
 
 func _open_draft() -> void:
 	phase = Phase.DRAFT
-	draft_offers = Boons.draft(GameState.rng_boons, GameState.stages_data["boons"], int(cfg["boon_offer_count"]))
+	draft_offers = Boons.draft(GameState.rng_boons, GameState.stages_data["boons"], GameState.boon_offer_count(STAGE_ID))
 	hud.show_draft(draft_offers)
 	draft_opened.emit(draft_offers)
 
@@ -297,11 +314,15 @@ func _start_boss() -> void:
 		stage.room_rect(StageLayout.BOSS_ROOM), GameState.rng_combat)
 	stage.add_child(boss)
 	boss.global_position = stage.boss_spawn()
-	boss.died.connect(func(_b: EnemyBase) -> void: _finish("VICTORY"))
+	boss.died.connect(func(_b: EnemyBase) -> void:
+		BarkDirector.say("VESPERA", "DEFEAT")
+		_finish("VICTORY"))
 	boss.adds_requested.connect(_on_adds_requested)
 	boss.phase_changed.connect(func(_p: int) -> void:
 		_end_echo_wave()
-		_begin_echo_wave(1))
+		_begin_echo_wave(1)
+		BarkDirector.say("VESPERA", "PHASE_TWO"))
+	boss.adaptation_triggered.connect(func(id: String) -> void: BarkDirector.say("VESPERA", "ADAPTATION", id))
 	hud.show_boss(boss)
 
 
@@ -391,6 +412,10 @@ func star_progress() -> Dictionary:
 # --- End of run (D10, D29) ----------------------------------------------------------------
 
 func _on_hero_died() -> void:
+	if room == StageLayout.BOSS_ROOM:
+		BarkDirector.say("VESPERA", "HERO_DEATH")
+	else:
+		BarkDirector.say("RELIQUARY", "DEATH")
 	_finish("DEFEAT")
 
 
@@ -405,6 +430,8 @@ func _finish(r: String) -> void:
 		return
 	phase = Phase.ENDED
 	result = r
+	feedback.end_hit_stop()
+	BarkDirector.end_run()
 	hero.input_vector = Vector2.ZERO
 	for e in alive_enemies():
 		e.queue_free()
@@ -427,11 +454,14 @@ func _finish(r: String) -> void:
 		var bd := GameState.loot_table(STAGE_ID).roll_boss_drop(GameState.rng_loot, hero.hero_id, grudge_hero)
 		run_drops.append(GameState.grant_drop(bd["weapon"]).to_dict())
 		GameState.inventory.add_essence(bd["essence_id"], 1)
+		glass_earned += GameState.glass_reward("boss_kill")
+		GameState.add_glass(GameState.glass_reward("boss_kill"))
 		summary["essence"] = bd["essence_id"]
 		GameState.record_victory(STAGE_ID, hero.hero_id, star["met"])
 		summary["star_earned"] = star["met"]
 		summary["adaptation"] = GameState.active_adaptation(STAGE_ID).get("name", "")
 	summary["drops"] = run_drops
+	summary["glass"] = glass_earned
 	SaveManager.save_profile()
 	hud.show_summary(summary)
 	run_ended.emit(summary)
@@ -453,8 +483,21 @@ func _notification(what: int) -> void:
 			set_paused(true)
 
 
-## Summary "Continue": a fresh run (the Hub replaces this in Phase 5).
+const HUB_SCENE := "res://scenes/main/MainHub.tscn"
+
+
+## Summary "Continue": back to the Hub (Phase 5 flow: brief → commit → run → summary → hub).
 func restart() -> void:
+	prepare_return()
+	get_tree().change_scene_to_file(HUB_SCENE)
+
+
+## Leaves no run state behind before the Hub loads (Gate 5: no orphaned state).
+func prepare_return() -> void:
 	get_tree().paused = false
+	paused = false
+	feedback.end_hit_stop()
+	if phase != Phase.ENDED:
+		EchoDirector.discard()
 	GameState.active_hero = ""
-	get_tree().reload_current_scene()
+	SaveManager.save_profile()

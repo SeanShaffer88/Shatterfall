@@ -1,0 +1,116 @@
+{
+	"schema_version": 1,
+	"_doc": "Barks and narrator (BLUEPRINT §2J, D43). Lines keyed by speaker → trigger → variant. RUN_START variants: the last clearing hero (BRUTE/ROGUE/MAGI) or FIRST. ADAPTATION variants: the adaptation id. Other triggers use ANY. {hero} is replaced with the playing hero's name.",
+	"rules": { "spacing": 12.0, "duration": 3.0, "repeat_runs": 3, "room_clear_every": 3 },
+	"lines": {
+		"VESPERA": {
+			"RUN_START": {
+				"FIRST": [
+					"Another light in my nave. It will gutter like the rest.",
+					"Come closer. The glass remembers every footstep.",
+					"You smell of the outside world. I will scour it off you.",
+					"Walk softly. Everything here was broken on purpose."
+				],
+				"BRUTE": [
+					"You again, Brute. I grew spines for you.",
+					"Swing that axe at me once more. Feel what it costs you now.",
+					"The big one returns. My carapace has been waiting.",
+					"Every blow you land, Brute, I will hand back to you."
+				],
+				"ROGUE": [
+					"Little blade. I have learned to be where you aren't.",
+					"You were quick, Rogue. Now I am quicker than your aim.",
+					"Try to pin me down twice. I dare you.",
+					"Your arrows remember where I stood. I don't stand there anymore."
+				],
+				"MAGI": [
+					"Your circles are smaller in here now, Magi.",
+					"I have dulled your runes. Cast them anyway.",
+					"Wells and novas. I have grown used to the taste.",
+					"Your light is thinner in my nave, scholar."
+				]
+			},
+			"PHASE_TWO": {
+				"ANY": [
+					"Enough. Let the walls come down.",
+					"You crack the glass. The glass cracks back.",
+					"Rise, reliquaries. Make them choose.",
+					"Now we bleed together."
+				]
+			},
+			"ADAPTATION": {
+				"SPIKED_CARAPACE": [
+					"Every edge you bring, I wear.",
+					"Mind the spines.",
+					"That cut was yours. So is this one.",
+					"Hit harder. Hurt yourself more."
+				],
+				"MIRAGE_VEIL": [
+					"Not there.",
+					"Your aim is a memory.",
+					"I was never where you looked.",
+					"Again. Wrong place."
+				],
+				"RUNIC_DAMPENING": [
+					"Your circles fall short.",
+					"Is that all your rune can reach?",
+					"I have shrunk your world.",
+					"Closer, Magi. You'll need to be."
+				]
+			},
+			"HERO_DEATH": {
+				"ANY": [
+					"Another shard for my windows.",
+					"Lie still. The nave keeps what it breaks.",
+					"I will remember how you fell.",
+					"Rest. You'll be back. They always are."
+				]
+			},
+			"DEFEAT": {
+				"ANY": [
+					"So the light gets through after all.",
+					"Then remember me. I will remember you.",
+					"Break me, then. I was glass before I was a grudge.",
+					"Next time, {hero}, I will be ready."
+				]
+			}
+		},
+		"RELIQUARY": {
+			"FIRST_RUN": {
+				"ANY": [
+					"The Nave has been dark a long time. Walk in.",
+					"Something old is listening. Go and see what.",
+					"Every window here was broken by her. Every one can be mended."
+				]
+			},
+			"FIRST_EVOLUTION": {
+				"ANY": [
+					"The weapon remembers what it could become.",
+					"Glass and steel agree, for once.",
+					"There. It was always in there."
+				]
+			},
+			"WINDOW_RESTORED": {
+				"ANY": [
+					"Light finds its way back in.",
+					"One more pane of colour against the dark.",
+					"The cathedral breathes a little easier."
+				]
+			},
+			"DEATH": {
+				"ANY": [
+					"The glass keeps your footsteps. Try again.",
+					"Not yet. Rise.",
+					"Every fall teaches the Echoes something."
+				]
+			},
+			"ROOM_CLEAR": {
+				"ANY": [
+					"Quiet, for now.",
+					"The floor still remembers the fight.",
+					"Onward. She's listening."
+				]
+			}
+		}
+	}
+}

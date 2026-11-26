@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"_doc": "Restore the Reliquary (BLUEPRINT §2I, D42). Glass rewards and the six windows, restored in order. unlock.type values: room_clear_heal, echo_cap, boon_offers, room_drop_chance, stage3_shard_cost, ending.",
+	"glass": { "room_clear": 3, "boss_kill": 10, "salvage": 1 },
+	"windows": [
+		{ "id": "LANTERN", "name": "Lantern Window", "glass": 20, "essence": 0, "color": "#E8912D",
+			"unlock": { "type": "room_clear_heal", "value": 0.20, "text": "Room-clear heal rises from 15% to 20%." } },
+		{ "id": "CHOIR", "name": "Choir Window", "glass": 40, "essence": 0, "color": "#5FD4E6",
+			"unlock": { "type": "echo_cap", "value": 3, "text": "Your Echoes remember 3 casts per wave instead of 2." } },
+		{ "id": "EMBER", "name": "Ember Window", "glass": 60, "essence": 0, "color": "#D92638",
+			"unlock": { "type": "boon_offers", "value": 4, "text": "Boon drafts offer 4 choices instead of 3." } },
+		{ "id": "LEDGER", "name": "Ledger Window", "glass": 80, "essence": 0, "color": "#D9A441",
+			"unlock": { "type": "room_drop_chance", "value": 0.70, "text": "Each cleared room drops a weapon 70% of the time, up from 60%." } },
+		{ "id": "FORGE", "name": "Forge Window", "glass": 100, "essence": 0, "color": "#B8B0B4",
+			"unlock": { "type": "stage3_shard_cost", "value": 30, "text": "Stage 3 evolutions cost 30 shards instead of 40." } },
+		{ "id": "VESPER", "name": "Vesper Window", "glass": 150, "essence": 1, "color": "#8F4FD4",
+			"unlock": { "type": "ending", "value": 1, "text": "The Reliquary is whole again." } }
+	]
+}

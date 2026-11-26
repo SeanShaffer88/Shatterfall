@@ -11,6 +11,7 @@ signal adds_requested(groups: Array)          # the run controller spawns them
 signal wall_raised(wall: ShardWall)
 signal blinked(from: Vector3, to: Vector3)
 signal reliquaries_raised(pillars: Array)
+signal adaptation_triggered(id: String)        # first time per fight (D43 barks)
 signal reliquaries_resolved(success: bool)
 
 const MELEE_SOURCES := ["CLEAVE", "LEAP_SLAM", "VORTEX_CLEAVE", "DAGGER_FLURRY"]
@@ -34,6 +35,7 @@ var _pillar_t: float = 0.0
 var _pair_age: float = 0.0
 var _break_times: Array[float] = []
 var _clock: float = 0.0
+var _adaptation_announced: bool = false
 
 
 func setup_boss(cfg_boss: Dictionary, adapt: Dictionary, target_hero: HeroController, arena: Rect2, random: RandomNumberGenerator) -> void:
@@ -105,6 +107,7 @@ func take_hit(hit: Dictionary) -> void:
 	if not is_alive():
 		return
 	if adaptation_id() == "RUNIC_DAMPENING" and not _dampening_allows(hit):
+		_announce_adaptation()
 		return
 	var before := hp
 	var dmg := int(hit.get("damage", 0))
@@ -115,6 +118,7 @@ func take_hit(hit: Dictionary) -> void:
 	if adaptation_id() == "SPIKED_CARAPACE" and not hit.get("is_echo", false) and _is_melee(hit) and is_instance_valid(hero):
 		var recoil := roundi((before - hp) * float(adaptation["params"]["recoil_fraction"]))
 		hero.apply_recoil(recoil)
+		_announce_adaptation()
 	if phase_index == 0 and hp <= int(boss_cfg["hp"]) * float(boss_cfg["phases"][1]["hp_at_or_below"]):
 		_enter_phase_two()
 	if hp == 0:
@@ -282,6 +286,7 @@ func _blink() -> void:
 	var from := global_position
 	_move(side * float(adaptation["params"]["blink_distance"]))
 	blinked.emit(from, global_position)
+	_announce_adaptation()
 	if not current_attack.is_empty():
 		current_attack["t"] = current_attack["full"]
 		_place_attack()
@@ -309,6 +314,12 @@ func _raise_wall() -> void:
 
 
 # --- Twin Reliquaries (D41) ----------------------------------------------------------
+
+func _announce_adaptation() -> void:
+	if not _adaptation_announced and adaptation_id() != "":
+		_adaptation_announced = true
+		adaptation_triggered.emit(adaptation_id())
+
 
 func _twin() -> Dictionary:
 	return boss_cfg["twin_reliquaries"]
